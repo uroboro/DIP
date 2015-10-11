@@ -9,15 +9,6 @@
 
 #import "DIPViewController.h"
 
-@interface OCVImageOperator : NSObject
-
-+ (id)sharedInstanceWithArg:(BOOL)arg;
-+ (id)sharedInstance;
-
-- (UIImage *)operateImage:(UIImage *)image;
-
-@end
-
 UIKIT_EXTERN NSString *rvcName(void) {
 	return @"DIPViewController";
 }
@@ -116,11 +107,12 @@ UIKIT_EXTERN NSString *rvcName(void) {
 		void *dylib = dlopen(dylibPath, RTLD_NOW);
 		if (!dylib) { UIAlert(@"!dylib",nil); return; }
 
-		UIImage *gImage = nil;
+		UIImage *(*operateImage)(UIImage *image);
+		operateImage = (UIImage *(*)(UIImage *))dlsym(dylib, "operateImage");
+		if (!operateImage) { UIAlert(@"!\"operateImage\" couldn't be found.\n",nil); return; }
 
-		if (objc_getClass("OCVImageOperator")) {
-			gImage = [[objc_getClass("OCVImageOperator") sharedInstance] operateImage:_currentImage];
-		}
+		UIImage *gImage = operateImage(_currentImage);
+
 		dlclose(dylib);
 
 		if (!gImage) { UIAlert(@"!gImage",nil); return; }
