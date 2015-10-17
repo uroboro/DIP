@@ -1,5 +1,4 @@
 #import <MobileCoreServices/MobileCoreServices.h>
-#include <objc/runtime.h>
 #include <dlfcn.h>
 #include <UIKit/UIGraphics.h>
 
@@ -44,11 +43,14 @@ UIKIT_EXTERN NSString *rvcName(void) {
 	[_configButton addTarget:self action:@selector(processImage:) forControlEvents:UIControlEventTouchUpInside];
 	[_scrollView addSubview:_configButton];
 
+	_imageOperator = [[OCVImageOperator alloc] initWithView:_configButton];
+
 	[self.view addSubview:_scrollView];
 }
 
 - (void)viewDidLoad {
 	[self processImage];
+
 }
 
 - (void)viewDidUnload {
@@ -99,8 +101,12 @@ UIKIT_EXTERN NSString *rvcName(void) {
 		dispatch_async(dispatch_get_main_queue(), ^{
 			[_configButton setTitle:@"PROCESSING" forState:UIControlStateNormal];
 		});
+
 		if (!_currentImage) { UIAlert(@"!_currentImage",nil); return; }
 
+#if 1
+		UIImage *gImage = [_imageOperator operateImage:_currentImage];
+#else
 		const char *dylibPath = UtilsResourcePathWithName(@"dip.dylib").UTF8String;
 		if (!dylibPath) { UIAlert(@"!dylibPath",nil); return; }
 
@@ -110,10 +116,10 @@ UIKIT_EXTERN NSString *rvcName(void) {
 		UIImage *(*operateImage)(UIImage *image);
 		operateImage = (UIImage *(*)(UIImage *))dlsym(dylib, "operateImage");
 		if (!operateImage) { UIAlert(@"!\"operateImage\" couldn't be found.\n",nil); return; }
-
 		UIImage *gImage = operateImage(_currentImage);
 
 		dlclose(dylib);
+#endif
 
 		if (!gImage) { UIAlert(@"!gImage",nil); return; }
 
