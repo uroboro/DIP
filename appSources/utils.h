@@ -4,9 +4,11 @@
 #include <Foundation/Foundation.h>
 #include <CoreGraphics/CGGeometry.h>
 
-NSString *UtilsDocumentPathWithName(NSString *name);
-NSString *UtilsResourcePathWithName(NSString *name);
+#include "common.h"
 
-CGRect UtilsAvailableScreenRect();
+DIP_EXTERN NSString *UtilsDocumentPathWithName(NSString *name);
+DIP_EXTERN NSString *UtilsResourcePathWithName(NSString *name);
+
+DIP_EXTERN CGRect UtilsAvailableScreenRect();
 
 #endif
