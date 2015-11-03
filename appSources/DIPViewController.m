@@ -22,8 +22,9 @@ UIKIT_EXTERN NSString *rvcName(void) {
 
 	_scrollView = [[UIScrollView alloc] initWithFrame:availableRect];
 	[_scrollView setBackgroundColor:[UIColor blackColor]];
-	_scrollView.contentSize = CGSizeMake(2 * availableRect.size.width, availableRect.size.height);
+	_scrollView.contentSize = CGSizeMake(3 * availableRect.size.width, availableRect.size.height);
 	_scrollView.pagingEnabled = YES;
+	_scrollView.delegate = self;
 
 	_actionButton = [UIButton buttonWithType:UIButtonTypeCustom];
 	[_actionButton setFrame:availableRect];
@@ -43,14 +44,28 @@ UIKIT_EXTERN NSString *rvcName(void) {
 	[_configButton addTarget:self action:@selector(processImage:) forControlEvents:UIControlEventTouchUpInside];
 	[_scrollView addSubview:_configButton];
 
-	_imageOperator = [[OCVImageOperator alloc] initWithView:_configButton];
+	_cameraView = [[UIImageView alloc] initWithFrame:CGRectOffset(availableRect, 2 * availableRect.size.width, 0)];
+	[_cameraView setBackgroundColor:[UIColor greenColor]];
+	[_scrollView addSubview:_cameraView];
+
+	_imageOperator = [[OCVImageOperator alloc] initWithView:_cameraView];
+	_imageOperator1 = [[OCVImageOperator alloc] initWithView:_configButton];
+	NSDictionary *options = @{
+		@"mode":(0?@"double":@"single"),
+		@"operation":@(1),
+		@"samples":@(10),
+		@"colorDepth":@(2),
+		@"kernelSize":@(5)
+	};
+	_options = [options mutableCopy];
+	_imageOperator.options = _options;
+	_imageOperator1.options = _options;
 
 	[self.view addSubview:_scrollView];
 }
 
 - (void)viewDidLoad {
 	[self processImage];
-
 }
 
 - (void)viewDidUnload {
@@ -59,20 +74,73 @@ UIKIT_EXTERN NSString *rvcName(void) {
 
 	[_configButton release];
 	_configButton = nil;
-	
+
 	[_currentImage release];
 	_currentImage = nil;
 
 	[super viewDidUnload];
 }
 
+#pragma mark - UIScrollViewDelegate
+
+- (void)scrollViewWillBeginDecelerating:(UIScrollView *)scrollView {
+	scrollView.userInteractionEnabled = NO;
+}
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+	scrollView.userInteractionEnabled = YES;
+
+	[UIApplication sharedApplication].idleTimerDisabled = NO;
+	self.navigationItem.rightBarButtonItem = nil;
+	//Run your code on the current page
+	int page = scrollView.contentOffset.x / scrollView.frame.size.width;
+	//int pages = scrollView.contentSize.width / scrollView.frame.size.width;
+	switch (page) {
+	case 0:
+		self.title = @"Image Processing";
+		[_imageOperator stop];
+		break;
+
+	case 1:
+		self.title = @"Processed image";
+		[_imageOperator stop];
+		break;
+
+	case 2:
+		self.title = @"Camera";
+		[_imageOperator start];
+		[UIApplication sharedApplication].idleTimerDisabled = YES;
+		UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithTitle:@"Swap" style:UIBarButtonItemStylePlain target:self action:@selector(swapCamera)];
+		self.navigationItem.rightBarButtonItem = item;
+		[item release];
+		break;
+
+	default:
+		self.title = @"Image Processing";
+		[_imageOperator stop];
+		break;
+	}
+}
+
 #pragma mark - Stuff
+
+- (void)swapCamera {
+	[_imageOperator swapCamera];
+}
 
 - (void)captureImage:(id)sender {
 	[self startCameraControllerFromViewController:self usingDelegate:self];
 }
 
 - (void)processImage:(id)sender {
+	static int operation = 8;
+	operation %= _imageOperator.maxOperations;
+	operation++;
+
+	_options[@"operation"] = @(operation);
+//UIAlert(@"_options", _options.description);
+	_imageOperator.options = _options;
+	_imageOperator1.options = _options;
 	[self processImage];
 }
 
@@ -104,22 +172,7 @@ UIKIT_EXTERN NSString *rvcName(void) {
 
 		if (!_currentImage) { UIAlert(@"!_currentImage",nil); return; }
 
-#if 1
-		UIImage *gImage = [_imageOperator operateImage:_currentImage];
-#else
-		const char *dylibPath = UtilsResourcePathWithName(@"dip.dylib").UTF8String;
-		if (!dylibPath) { UIAlert(@"!dylibPath",nil); return; }
-
-		void *dylib = dlopen(dylibPath, RTLD_NOW);
-		if (!dylib) { UIAlert(@"!dylib",nil); return; }
-
-		UIImage *(*operateImage)(UIImage *image);
-		operateImage = (UIImage *(*)(UIImage *))dlsym(dylib, "operateImage");
-		if (!operateImage) { UIAlert(@"!\"operateImage\" couldn't be found.\n",nil); return; }
-		UIImage *gImage = operateImage(_currentImage);
-
-		dlclose(dylib);
-#endif
+		UIImage *gImage = [_imageOperator1 operateImage:_currentImage];
 
 		if (!gImage) { UIAlert(@"!gImage",nil); return; }
 
@@ -128,7 +181,8 @@ UIKIT_EXTERN NSString *rvcName(void) {
 			CGRect availableRect = UtilsAvailableScreenRect();
 			CGFloat k = floor(gImage.size.height / gImage.size.width * availableRect.size.width);
 
-			[_configButton setFrame:CGRectMake(availableRect.size.width, 0, availableRect.size.width, k)];
+			CGRect f = _configButton.frame;
+			[_configButton setFrame:CGRectMake(f.origin.x, f.origin.y, availableRect.size.width, k)];
 			[_configButton setBackgroundImage:gImage forState:UIControlStateNormal];
 			[_configButton setTitle:nil forState:UIControlStateNormal];
 		});
@@ -142,8 +196,7 @@ UIKIT_EXTERN NSString *rvcName(void) {
 	usingDelegate:(id <UINavigationControllerDelegate,
 	UIImagePickerControllerDelegate>) delegate {
 
-	if (([UIImagePickerController isSourceTypeAvailable:
-			UIImagePickerControllerSourceTypeCamera] == NO)
+	if (![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]
 			|| (delegate == nil) || (controller == nil)) {
 		return NO;
 	}

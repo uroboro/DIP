@@ -3,12 +3,56 @@
 
 #import "common.h"
 #import "utils.h"
+#import "scaleAndRotate.h"
 
 #import "OCVImageOperator.h"
 
+#include <opencv2/imgproc/imgproc_c.h>
+
+#if USE_DYLIB
 dispatch_source_t monitorUpdatesToFile(const char* filename, dispatch_block_t event_handler, dispatch_block_t cancel_handler);
+static BOOL _update = YES;
+#else
+#include "operateImage.h"
+#endif
 
 @implementation OCVImageOperator
+
+- (id)init {
+	if ((self = [super init])) {
+#if USE_DYLIB
+		const char *dylibPath = UtilsResourcePathWithName(@"dip.dylib").UTF8String;
+		_handle = dlopen(dylibPath, RTLD_NOW);
+		if (!_handle) { UIAlert(@"!dylib", ([NSString stringWithFormat:@"%s", dylibPath])); return self; }
+
+		_source = monitorUpdatesToFile(dylibPath, ^{
+			if (_update) {
+				_update = NO;
+
+				dlclose(_handle);
+
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC),
+					dispatch_get_main_queue(), ^(void) {
+
+					UIAlert(@"updating dylib",nil);
+					const char *dylibPath = UtilsResourcePathWithName(@"dip.dylib").UTF8String;
+					_handle = dlopen(dylibPath, RTLD_NOW);
+					if (!_handle) { UIAlert(@"!dylib", ([NSString stringWithFormat:@"%s", dylibPath])); return; }
+
+					[self updateView];
+
+					_update = YES;
+				});
+			}
+		}, ^{
+			dlclose(_handle);
+		});
+#endif
+		_myCam = [[AVCustomCapture alloc] initWithDelegate:self];
+		_myCam.videoOrientation = AVCaptureVideoOrientationPortrait;
+	}
+	return self;
+}
 
 - (id)initWithView:(UIView *)view {
 	if ((self = [self init])) {
@@ -18,59 +62,104 @@ dispatch_source_t monitorUpdatesToFile(const char* filename, dispatch_block_t ev
 	return self;
 }
 
-- (id)init {
-	if ((self = [super init])) {
-		const char *dylibPath = UtilsResourcePathWithName(@"dip.dylib").UTF8String;
-		_handle = dlopen(dylibPath, RTLD_NOW);
-		if (!_handle) { UIAlert(@"!dylib", ([NSString stringWithFormat:@"%s", dylibPath])); return self; }
-#if 0
-		_source = monitorUpdatesToFile(dylibPath, ^{
-			dlclose(_handle);
-			_handle = dlopen(dylibPath, RTLD_NOW);
-			[self updateView];
-		}, ^{});
-#endif
-	}
-	return self;
-}
-
 - (void)dealloc {
-	dispatch_source_cancel(_source);
-	dlclose(_handle);
+#if USE_DYLIB
+	if (_source) dispatch_source_cancel(_source);
+	if (_handle) dlclose(_handle);
+#endif
 	[_image release];
 
 	[super dealloc];
 }
 
+- (NSUInteger)maxOperations {
+#if USE_DYLIB
+	NSUInteger (*maxOperations)(void) = NULL;
+	maxOperations = (NSUInteger (*)(void))dlsym(_handle, "maxOperations");
+	if (!maxOperations) { UIAlert(@"!\"maxOperations\" couldn't be found.",nil); return 1; }
+#endif
+	_maxOperations = maxOperations();
+	return _maxOperations;
+}
+
 - (UIImage *)operateImage:(UIImage *)image {
-	[_image release];
+	UIImage *prevImage = _image;
 	_image = [image retain];
+#if USE_DYLIB
+	UIImage *(*operateImage)(UIImage *, UIImage *, NSMutableDictionary *) = NULL;
+	operateImage = (UIImage *(*)(UIImage *, UIImage *, NSMutableDictionary *))dlsym(_handle, "operateImage");
+	if (!operateImage) { UIAlert(@"!\"operateImage\" couldn't be found.",nil); return nil; }
+#endif
+	UIImage *r = operateImage(image, prevImage, _options);
+	[prevImage release];
 
-	static UIImage *(*operateImage)(UIImage *, UIImage *) = NULL;
-	if (!operateImage) {
-		operateImage = (UIImage *(*)(UIImage *, UIImage *))dlsym(_handle, "operateImage");
-	}
-	if (!operateImage) { UIAlert(@"!\"operateImage\" couldn't be found.\n",nil); return nil; }
-
-	return operateImage(image, nil);
+	return r;
 }
 
 - (void)updateView {
 	if (!_image) { return; }
 
 	UIImage *gImage = [self operateImage:_image];
+	[self setViewImage:gImage];
+}
 
+- (void)getCGImage:(CGImageRef)cgImage {
+	if (!cgImage) { return; }
+
+	// Create an image object from the Quartz image
+	UIImage *gImage = [UIImage imageWithCGImage:cgImage];
+#if USE_DYLIB
+	UIImage *(*operateImage)(UIImage *, UIImage *, NSMutableDictionary *) = NULL;
+	operateImage = (UIImage *(*)(UIImage *, UIImage *, NSMutableDictionary *))dlsym(_handle, "operateImage");
+	if (!operateImage) { UIAlert(@"!\"operateImage\" couldn't be found.",nil); return; }
+#endif
+	UIImage *gImage2 = operateImage(gImage, nil, _options);
+	[self setViewImage:gImage2];
+}
+
+- (void)setViewImage:(UIImage *)image {
 	dispatch_async(dispatch_get_main_queue(), ^{
 		CGRect availableRect = UtilsAvailableScreenRect();
-		CGFloat k = floor(gImage.size.height / gImage.size.width * availableRect.size.width);
+		CGFloat k = floor(image.size.height / image.size.width * availableRect.size.width);
 
-		[_view setFrame:CGRectMake(availableRect.size.width, 0, availableRect.size.width, k)];
-		[(UIButton *)_view setBackgroundImage:gImage forState:UIControlStateNormal];
+		CGRect f = _view.frame;
+		[_view setFrame:CGRectMake(f.origin.x, f.origin.y, availableRect.size.width, k)];
+		if ([_view isKindOfClass:[UIImageView class]]) {
+			UIImageView *iv = (UIImageView *)_view;
+			iv.image = image;
+		}
+		if ([_view isKindOfClass:[UIButton class]]) {
+			UIButton *bv = (UIButton *)_view;
+			[bv setBackgroundImage:image forState:UIControlStateNormal];
+		}
 	});
+}
+
+- (void)start {
+	dispatch_queue_t q = dispatch_queue_create("com.uroboro.operator.start", DISPATCH_QUEUE_CONCURRENT);
+	dispatch_async(q, ^{
+		[_myCam start];
+	});
+	dispatch_release(q);
+}
+- (void)stop {
+	dispatch_queue_t q = dispatch_queue_create("com.uroboro.operator.stop", DISPATCH_QUEUE_CONCURRENT);
+	dispatch_async(q, ^{
+		[_myCam stop];
+	});
+	dispatch_release(q);
+}
+- (void)swapCamera {
+	dispatch_queue_t q = dispatch_queue_create("com.uroboro.operator.swap", DISPATCH_QUEUE_CONCURRENT);
+	dispatch_async(q, ^{
+		[_myCam swapCamera];
+	});
+	dispatch_release(q);
 }
 
 @end
 
+#if USE_DYLIB
 dispatch_source_t monitorUpdatesToFile(const char* filename, dispatch_block_t event_handler, dispatch_block_t cancel_handler) {
 	int fd = open(filename, O_EVTONLY);
 	if (fd == -1)
@@ -106,3 +195,4 @@ dispatch_source_t monitorUpdatesToFile(const char* filename, dispatch_block_t ev
  
 	return source;
 }
+#endif
