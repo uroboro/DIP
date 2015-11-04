@@ -4,10 +4,8 @@
 #import "AVCustomCapture.h"
 
 @interface OCVImageOperator : NSObject <AVCustomCaptureDelegate> {
-	dispatch_source_t _source;
-	void *_handle;
 }
-
+@property (nonatomic, assign) CALayer *customPreviewLayer;
 @property (nonatomic, assign) UIView *view;
 - (id)initWithView:(UIView *)view;
 
@@ -17,7 +15,7 @@
 @property (nonatomic, copy) NSMutableDictionary *options;
 @property (nonatomic, assign) NSUInteger maxOperations;
 
-@property (nonatomic, retain) AVCustomCapture *myCam;
+@property (nonatomic, retain) AVCustomCapture *camera;
 - (void)start;
 - (void)stop;
 - (void)swapCamera;

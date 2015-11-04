@@ -11,8 +11,8 @@
 
 - (id)init {
 	if ((self = [super init])) {
-		_myCam = [[AVCustomCapture alloc] initWithDelegate:self];
-		_myCam.videoOrientation = AVCaptureVideoOrientationPortrait;
+		_camera = [[AVCustomCapture alloc] initWithDelegate:self];
+		_camera.videoOrientation = AVCaptureVideoOrientationPortrait;
 	}
 	return self;
 }
@@ -20,6 +20,11 @@
 - (id)initWithView:(UIView *)view {
 	if ((self = [self init])) {
 		_view = view;
+
+		// Preview Layer
+		_customPreviewLayer = [CALayer layer];
+		_customPreviewLayer.frame = CGRectMake(0, 0, _view.frame.size.width, _view.frame.size.height);
+		[_view.layer addSublayer:_customPreviewLayer];
 	}
 
 	return self;
@@ -52,13 +57,20 @@
 	[self setViewImage:gImage];
 }
 
-- (void)getCGImage:(CGImageRef)cgImage {
-	if (!cgImage) { return; }
+- (void)getCGImage:(CGImageRef)imageRef {
+	if (!imageRef) { return; }
 
-	// Create an image object from the Quartz image
-	UIImage *gImage = [UIImage imageWithCGImage:cgImage];
-	UIImage *gImage2 = operateImage(gImage, nil, _options);
-	[self setViewImage:gImage2];
+	size_t width = CGImageGetWidth(imageRef);
+	size_t height = CGImageGetHeight(imageRef);
+	CGRect availableRect = UtilsAvailableScreenRect();
+	CGFloat k = floor((CGFloat)height / width * availableRect.size.width);
+	_customPreviewLayer.frame = CGRectMake(0, 0, availableRect.size.width, k);
+
+	CGImageRef imageRef2 = operateImageRef(imageRef, nil, _options);
+	dispatch_sync(dispatch_get_main_queue(), ^{
+		_customPreviewLayer.contents = (__bridge id)imageRef2;
+	});
+	CGImageRelease(imageRef2);
 }
 
 - (void)setViewImage:(UIImage *)image {
@@ -79,24 +91,28 @@
 	});
 }
 
+#pragma mark - Camera controls
+
 - (void)start {
 	dispatch_queue_t q = dispatch_queue_create("com.uroboro.operator.start", DISPATCH_QUEUE_CONCURRENT);
 	dispatch_async(q, ^{
-		[_myCam start];
+		[_camera start];
 	});
 	dispatch_release(q);
 }
 - (void)stop {
 	dispatch_queue_t q = dispatch_queue_create("com.uroboro.operator.stop", DISPATCH_QUEUE_CONCURRENT);
 	dispatch_async(q, ^{
-		[_myCam stop];
+		[_camera stop];
 	});
 	dispatch_release(q);
 }
 - (void)swapCamera {
 	dispatch_queue_t q = dispatch_queue_create("com.uroboro.operator.swap", DISPATCH_QUEUE_CONCURRENT);
 	dispatch_async(q, ^{
-		[_myCam swapCamera];
+		[_camera stop];
+		[_camera swapCamera];
+		[_camera start];
 	});
 	dispatch_release(q);
 }
