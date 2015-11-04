@@ -29,7 +29,7 @@ UIKIT_EXTERN NSString *rvcName(void) {
 	_actionButton = [UIButton buttonWithType:UIButtonTypeCustom];
 	[_actionButton setFrame:availableRect];
 	[_actionButton setBackgroundColor:[UIColor darkGrayColor]];
-	[_actionButton addTarget:self action:@selector(captureImage:) forControlEvents:UIControlEventTouchUpInside];
+	[_actionButton addTarget:self action:@selector(actionButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
 	_currentImage = [self previousActionImage];
 	if (_currentImage) {
 		CGFloat k = floor(_currentImage.size.height / _currentImage.size.width * availableRect.size.width);
@@ -41,7 +41,7 @@ UIKIT_EXTERN NSString *rvcName(void) {
 	_configButton = [UIButton buttonWithType:UIButtonTypeCustom];
 	[_configButton setFrame:CGRectOffset(availableRect, availableRect.size.width, 0)];
 	[_configButton setBackgroundColor:[UIColor lightGrayColor]];
-	[_configButton addTarget:self action:@selector(processImage:) forControlEvents:UIControlEventTouchUpInside];
+	[_configButton addTarget:self action:@selector(configButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
 	[_scrollView addSubview:_configButton];
 
 	_cameraView = [[UIImageView alloc] initWithFrame:CGRectOffset(availableRect, 2 * availableRect.size.width, 0)];
@@ -107,10 +107,10 @@ UIKIT_EXTERN NSString *rvcName(void) {
 		break;
 
 	case 2:
-		self.title = @"Camera";
+		self.title = [@"Camera" stringByAppendingString:(_imageOperator.camera.devicePosition == AVCaptureDevicePositionBack) ? @" Back":@" Front"];
 		[_imageOperator start];
 		[UIApplication sharedApplication].idleTimerDisabled = YES;
-		UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithTitle:@"Swap" style:UIBarButtonItemStylePlain target:self action:@selector(swapCamera)];
+		UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithTitle:@"Swap" style:UIBarButtonItemStylePlain target:self action:@selector(swapButtonPressed:)];
 		self.navigationItem.rightBarButtonItem = item;
 		[item release];
 		break;
@@ -122,17 +122,29 @@ UIKIT_EXTERN NSString *rvcName(void) {
 	}
 }
 
+#pragma mark - Button selectors
+
+- (void)actionButtonPressed:(id)sender {
+	[self captureImage];
+}
+- (void)configButtonPressed:(id)sender {
+	[self executeConfig];
+}
+- (void)swapButtonPressed:(id)sender {
+	[self swapCamera];
+}
+
 #pragma mark - Stuff
 
 - (void)swapCamera {
 	[_imageOperator swapCamera];
 }
 
-- (void)captureImage:(id)sender {
+- (void)captureImage {
 	[self startCameraControllerFromViewController:self usingDelegate:self];
 }
 
-- (void)processImage:(id)sender {
+- (void)executeConfig {
 	static int operation = 8;
 	operation %= _imageOperator.maxOperations;
 	operation++;
