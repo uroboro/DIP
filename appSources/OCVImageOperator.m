@@ -63,8 +63,8 @@
 	size_t width = CGImageGetWidth(imageRef);
 	size_t height = CGImageGetHeight(imageRef);
 	CGRect availableRect = UtilsAvailableScreenRect();
-	CGFloat k = floor((CGFloat)height / width * availableRect.size.width);
-	_customPreviewLayer.frame = CGRectMake(0, 0, availableRect.size.width, k);
+	CGFloat k = floor((CGFloat)height / width);
+	_customPreviewLayer.frame = CGRectMake(0, 0, availableRect.size.width, k * availableRect.size.width);
 
 	CGImageRef imageRef2 = operateImageRef(imageRef, nil, _options);
 	dispatch_sync(dispatch_get_main_queue(), ^{
@@ -76,10 +76,10 @@
 - (void)setViewImage:(UIImage *)image {
 	dispatch_async(dispatch_get_main_queue(), ^{
 		CGRect availableRect = UtilsAvailableScreenRect();
-		CGFloat k = floor(image.size.height / image.size.width * availableRect.size.width);
+		CGFloat k = floor(image.size.height / image.size.width);
 
 		CGRect f = _view.frame;
-		[_view setFrame:CGRectMake(f.origin.x, f.origin.y, availableRect.size.width, k)];
+		_view.frame = CGRectMake(f.origin.x, f.origin.y, availableRect.size.width, k * availableRect.size.width);
 		if ([_view isKindOfClass:[UIImageView class]]) {
 			UIImageView *iv = (UIImageView *)_view;
 			iv.image = image;
