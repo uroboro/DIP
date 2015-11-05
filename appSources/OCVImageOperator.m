@@ -20,11 +20,6 @@
 - (id)initWithView:(UIView *)view {
 	if ((self = [self init])) {
 		_view = view;
-
-		// Preview Layer
-		_customPreviewLayer = [CALayer layer];
-		_customPreviewLayer.frame = CGRectMake(0, 0, _view.frame.size.width, _view.frame.size.height);
-		[_view.layer addSublayer:_customPreviewLayer];
 	}
 
 	return self;
@@ -41,10 +36,11 @@
 	return _maxOperations;
 }
 
-- (UIImage *)operateImage:(UIImage *)image {
+- (UIImage *)operateImageCreate:(UIImage *)image {
 	UIImage *prevImage = _image;
 	_image = [image retain];
-	UIImage *r = operateImage(image, prevImage, _options);
+
+	UIImage *r = operateImageCreate(image, prevImage, _options);
 	[prevImage release];
 
 	return r;
@@ -53,41 +49,43 @@
 - (void)updateView {
 	if (!_image) { return; }
 
-	UIImage *gImage = [self operateImage:_image];
-	[self setViewImage:gImage];
+	UIImage *image = [self operateImageCreate:_image];
+	[self setViewImage:image];
 }
 
 - (void)getCGImage:(CGImageRef)imageRef {
 	if (!imageRef) { return; }
 
-	size_t width = CGImageGetWidth(imageRef);
-	size_t height = CGImageGetHeight(imageRef);
-	CGRect availableRect = UtilsAvailableScreenRect();
-	CGFloat k = floor((CGFloat)height / width);
-	_customPreviewLayer.frame = CGRectMake(0, 0, availableRect.size.width, k * availableRect.size.width);
-
-	CGImageRef imageRef2 = operateImageRef(imageRef, nil, _options);
-	dispatch_sync(dispatch_get_main_queue(), ^{
-		_customPreviewLayer.contents = (__bridge id)imageRef2;
-	});
+	CGImageRef imageRef2 = operateImageRefCreate(imageRef, nil, _options);
+	UIImage *image = [[UIImage alloc] initWithCGImage:imageRef2];
 	CGImageRelease(imageRef2);
+
+	[self setViewImage:image];
+
+	[image release];
 }
 
 - (void)setViewImage:(UIImage *)image {
-	dispatch_async(dispatch_get_main_queue(), ^{
-		CGRect availableRect = UtilsAvailableScreenRect();
-		CGFloat k = floor(image.size.height / image.size.width);
+	if (!image) { return; }
 
+	dispatch_async(dispatch_get_main_queue(), ^{
+		UIImage *img = [[UIImage alloc] initWithCGImage:image.CGImage];
+
+		CGRect availableRect = UtilsAvailableScreenRect();
+		CGFloat k = img.size.height / img.size.width;
 		CGRect f = _view.frame;
-		_view.frame = CGRectMake(f.origin.x, f.origin.y, availableRect.size.width, k * availableRect.size.width);
+		_view.frame = CGRectMake(f.origin.x, f.origin.y, availableRect.size.width, floor(k * availableRect.size.width));
+
 		if ([_view isKindOfClass:[UIImageView class]]) {
 			UIImageView *iv = (UIImageView *)_view;
-			iv.image = image;
+			[iv setImage:img];
 		}
 		if ([_view isKindOfClass:[UIButton class]]) {
 			UIButton *bv = (UIButton *)_view;
-			[bv setBackgroundImage:image forState:UIControlStateNormal];
+			[bv setBackgroundImage:img forState:UIControlStateNormal];
 		}
+
+		[img release];
 	});
 }
 

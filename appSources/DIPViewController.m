@@ -184,20 +184,26 @@ UIKIT_EXTERN NSString *rvcName(void) {
 
 		if (!_currentImage) { UIAlert(@"!_currentImage",nil); return; }
 
-		UIImage *gImage = [_imageOperator1 operateImage:_currentImage];
+		UIImage *image = [_imageOperator1 operateImageCreate:_currentImage];
 
-		if (!gImage) { UIAlert(@"!gImage",nil); return; }
+		if (!image) { UIAlert(@"!image",nil); return; }
 
 		// UIKIT happens in the main thread/queue
 		dispatch_async(dispatch_get_main_queue(), ^{
-			CGRect availableRect = UtilsAvailableScreenRect();
-			CGFloat k = floor(gImage.size.height / gImage.size.width * availableRect.size.width);
+			UIImage *img = [[UIImage alloc] initWithCGImage:image.CGImage];
 
+			CGRect availableRect = UtilsAvailableScreenRect();
+			CGFloat k = img.size.height / img.size.width;
 			CGRect f = _configButton.frame;
-			[_configButton setFrame:CGRectMake(f.origin.x, f.origin.y, availableRect.size.width, k)];
-			[_configButton setBackgroundImage:gImage forState:UIControlStateNormal];
+			_configButton.frame = CGRectMake(f.origin.x, f.origin.y, availableRect.size.width, floor(k * availableRect.size.width));
+
+			[_configButton setBackgroundImage:image forState:UIControlStateNormal];
 			[_configButton setTitle:nil forState:UIControlStateNormal];
+
+			[img release];
 		});
+
+		[image release];
 	});
 	dispatch_release(q);
 }
