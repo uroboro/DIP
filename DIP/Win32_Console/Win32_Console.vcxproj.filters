@@ -32,5 +32,8 @@
     <ClCompile Include="Win32_Console.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="operateImage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
