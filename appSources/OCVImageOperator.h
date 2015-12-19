@@ -12,7 +12,6 @@
 - (UIImage *)operateImageCreate:(UIImage *)image;
 
 @property (nonatomic, copy) NSMutableDictionary *options;
-@property (nonatomic, assign) NSUInteger maxOperations;
 
 @property (nonatomic, retain) AVCustomCapture *camera;
 - (void)start;

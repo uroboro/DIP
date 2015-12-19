@@ -145,8 +145,8 @@ UIKIT_EXTERN NSString *rvcName(void) {
 }
 
 - (void)executeConfig {
-	static int operation = 8;
-	operation %= _imageOperator.maxOperations;
+	static int operation = 4;
+	operation %= 14;
 	operation++;
 
 	_options[@"operation"] = @(operation);

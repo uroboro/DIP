@@ -31,11 +31,6 @@
 	[super dealloc];
 }
 
-- (NSUInteger)maxOperations {
-	_maxOperations = maxOperations();
-	return _maxOperations;
-}
-
 - (UIImage *)operateImageCreate:(UIImage *)image {
 	UIImage *prevImage = _image;
 	_image = [image retain];
