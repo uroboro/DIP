@@ -5,6 +5,7 @@
 #include "operateImage.h"
 
 int main(int argc, char *argv[], char *envp[]) {
+#if 01
 	//char name[] = "resources/Edges.png";
 	//char name[] = "resources/Untitled100x100.png";
 	char name[] = "resources/Untitled20x20.png";
@@ -14,6 +15,7 @@ int main(int argc, char *argv[], char *envp[]) {
 	cvWaitKey(0);
 	cvReleaseImage(&aaa); cvReleaseImage(&tmp3d);
 	return 0;
+#endif
 #if 0
 	char name[] = "/home/uroboro/Downloads/floating_palace_by_jonone.jpg";
 	IplImage *aaa = cvLoadImage(name, -1);
