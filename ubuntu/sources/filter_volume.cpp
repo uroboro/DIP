@@ -71,13 +71,6 @@ int cvFindContours2(IplImage* image, CvMemStorage* storage, CvSeq** first_contou
 }
 
 int filterByVolume(IplImage *src, IplImage *dst, long minVolume) {
-/*
-	IplImage *tmp_out = cvCloneImage(src);
-	int done = 0;
-	while (done == 0) {
-		
-	}
-*/
 	printf("total area:%d\n", src->width * src->height);
 {
 	IplImage *tmp3d = cvCreateImage(cvGetSize(src), IPL_DEPTH_8U, 3);
