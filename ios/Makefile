@@ -12,7 +12,7 @@ OPENCV_FRAMEWORKS = UIKit Accelerate AssetsLibrary AVFoundation QuartzCore CoreG
 
 #DIP: application
 APPLICATION_NAME = DIP
-DIP_FILES = $(call findfiles,ios)
+DIP_FILES = $(call findfiles,sources)
 DIP_CFLAGS = $(OPENCV_CFLAGS)
 DIP_LDFLAGS = $(OPENCV_LDFLAGS)
 DIP_FRAMEWORKS = CoreFoundation Foundation MobileCoreServices $(OPENCV_FRAMEWORKS)
