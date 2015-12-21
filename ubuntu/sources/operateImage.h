@@ -1,3 +1,6 @@
+#ifndef OPERATEIMAGE_H
+#define OPERATEIMAGE_H
+
 #include <stdio.h>
 #include <opencv2/core/core_c.h>
 #include <opencv2/core/core.hpp>
@@ -11,6 +14,7 @@
 #define OUTPUT_WINDOW	"Output Window"
 #define CONTROL_WINDOW	"Control Window"
 
+#include "common.h"
 #include "click.h"
 #include "geometry.h"
 #include "histogram.h"
@@ -18,7 +22,7 @@
 #include "face_detection.h"
 #include "fixes.h"
 
-typedef struct _userdata {
+DIP_EXTERN typedef struct _userdata {
 	int timestep;
 	int key;
 
@@ -47,15 +51,18 @@ typedef struct _userdata {
 	IplImage *output[2];
 } Userdata;
 
-Userdata getSessionUserdata(CvSize size);
-void freeSessionUserdata(Userdata *userdata);
+DIP_EXTERN Userdata getSessionUserdata(CvSize size);
+DIP_EXTERN void freeSessionUserdata(Userdata *userdata);
 
-void setupWindows(Userdata *userdata);
-void destroyWindows(Userdata *userdata);
+DIP_EXTERN void setupWindows(Userdata *userdata);
+DIP_EXTERN void destroyWindows(Userdata *userdata);
 
-char operateImage(Userdata *userdata);
+DIP_EXTERN void cvClose(CvArr *src, CvArr *dst, CvArr *mask, size_t n);
+DIP_EXTERN char operateImage(Userdata *userdata);
 
-void mouseCallback(int event, int x, int y, int flags, void* userdata);
-void trackbarCallback(int val);
+DIP_EXTERN void mouseCallback(int event, int x, int y, int flags, void* userdata);
+DIP_EXTERN void trackbarCallback(int val);
 
-int filterByVolume(IplImage *src, IplImage *dst, long minVolume);
+DIP_EXTERN int filterByVolume(IplImage *src, IplImage *dst, long minVolume);
+
+#endif /* OPERATEIMAGE_H */

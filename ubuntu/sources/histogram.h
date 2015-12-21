@@ -4,7 +4,10 @@
 #include <sys/types.h>
 #include <opencv2/core/core_c.h>
 
-size_t calcularHistograma(IplImage *src, size_t *binsCount, size_t **bins);
-void graficarHistograma(IplImage *dst, size_t binsCount, size_t *bins);
+#include "common.h"
+
+DIP_EXTERN size_t calcularHistograma(IplImage *src, size_t *binsCount, size_t **bins);
+
+DIP_EXTERN void graficarHistograma(IplImage *dst, size_t binsCount, size_t *bins);
 
 #endif /* HISTOGRAM_H */

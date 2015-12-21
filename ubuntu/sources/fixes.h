@@ -3,14 +3,16 @@
 
 #include <opencv2/core/core_c.h>
 
-void cvCopy2(CvArr *src, CvArr *dst, CvArr *mask);
+#include "common.h"
 
-int cvFindContours2(IplImage* image, CvMemStorage* storage, CvSeq** first_contour, int header_size, int mode, int method, CvPoint offset);
+DIP_EXTERN void cvCopy2(CvArr *src, CvArr *dst, CvArr *mask);
 
-void cvTranslateImage2(IplImage *src, IplImage *dst, int offsetx, int offsety);
+DIP_EXTERN int cvFindContours2(IplImage* image, CvMemStorage* storage, CvSeq** first_contour, int header_size, int mode, int method, CvPoint offset);
 
-int cvContourArea2(CvSeq *contour);
+DIP_EXTERN void cvTranslateImage2(IplImage *src, IplImage *dst, int offsetx, int offsety);
 
-IplImage* createSubArray(IplImage *src, CvRect rect);
+DIP_EXTERN int cvContourArea2(CvSeq *contour);
+
+DIP_EXTERN IplImage* createSubArray(IplImage *src, CvRect rect);
 
 #endif /* FIXES_H */

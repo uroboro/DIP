@@ -8,9 +8,9 @@ void cvCopy2(CvArr *src, CvArr *dst, CvArr *mask) {
 
 	cvSplit(src, tmp1dB, tmp1dG, tmp1dR, NULL);
 
-	cvAnd(tmp1dB, mask, tmp1dB);
-	cvAnd(tmp1dG, mask, tmp1dG);
-	cvAnd(tmp1dR, mask, tmp1dR);
+	cvAnd(tmp1dB, mask, tmp1dB, NULL);
+	cvAnd(tmp1dG, mask, tmp1dG, NULL);
+	cvAnd(tmp1dR, mask, tmp1dR, NULL);
 
 	cvMerge(tmp1dB, tmp1dG, tmp1dR, NULL, dst);
 
@@ -51,7 +51,7 @@ int cvFindContours2(IplImage* image, CvMemStorage* storage, CvSeq** first_contou
 
 	CvRect rect = cvRect(0, 0, image->width, image->height);
 	cvSetImageROI(tmp3d, rect);
-	cvResize(image, tmp3d);
+	cvResize(image, tmp3d, CV_INTER_LINEAR);
 	cvResetImageROI(tmp3d);
 	cvTranslateImage2(tmp3d, tmp3d, 1, 1);
 

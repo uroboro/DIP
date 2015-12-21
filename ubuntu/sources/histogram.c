@@ -49,7 +49,12 @@ size_t calcularHistograma(IplImage *src, size_t *binsCount, size_t **bins) {
 }
 
 void graficarHistograma(IplImage *dst, size_t binsCount, size_t *bins) {
-	static CvScalar hist_color = cvScalarAll(255);
+	static CvScalar hist_color;
+	static char hist_color_init = 0;
+	if (hist_color_init == 0) {
+		hist_color_init = 1;
+		hist_color = cvScalarAll(255);
+	}
 	size_t hist_size = 256;
 	//cvSet(ImagenHistorial, cvScalarAll(0), 0);
 
@@ -81,13 +86,13 @@ void graficarHistograma(IplImage *dst, size_t binsCount, size_t *bins) {
 		IplImage *channelC = cvCreateImage(cvGetSize(dst), IPL_DEPTH_8U, 1);
 		cvSplit(dst, channelA, channelB, channelC, NULL);
 
-		hist_color = cvScalar(255, 0, 0);
+		hist_color = CV_RGB(255, 0, 0);
 		graficarHistograma(channelA, binsCount, bins);
 
-		hist_color = cvScalar(0, 255, 0);
+		hist_color = CV_RGB(0, 255, 0);
 		graficarHistograma(channelB, binsCount, bins);
 
-		hist_color = cvScalar(0, 0, 255);
+		hist_color = CV_RGB(0, 0, 255);
 		graficarHistograma(channelC, binsCount, bins);
 
 		hist_color = cvScalarAll(255);

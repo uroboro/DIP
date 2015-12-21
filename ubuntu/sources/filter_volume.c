@@ -22,12 +22,14 @@ int recursiveContoursDescription(IplImage *src, CvSeq *contours, int full_area, 
 			IplImage *tmp3d = cvCloneImage(src);
 			cvSet(tmp3d, cvScalarAll(0), NULL);
 			cvDrawContours(tmp3d, tmp, cvScalarAll(192), cvScalarAll(64), 0, CV_FILLED, 8, cvPoint(0, 0));
+			if (indent > 0) cvDrawContours(tmp3d, tmp, cvScalarAll(0), cvScalarAll(0), 0, 0, 8, cvPoint(0, 0));
+#if 0
 			char varname[] = "X_X_X";
 			varname[0] = '0' + aaaaaa;
 			varname[2] = '0' + indent;
 			varname[4] = '0' + i;
-			if (indent > 0) cvDrawContours(tmp3d, tmp, cvScalarAll(0), cvScalarAll(0), 0, 0, 8, cvPoint(0, 0));
-			//CVSHOW(varname, 150+300 * aaaaaa+10*indent, 100+50 * i, 200, 200, tmp3d);
+			CVSHOW(varname, 150 + 300 * aaaaaa + 10 * indent, 100 + 50 * i, 200, 200, tmp3d);
+#endif
 			int pixels = cvContourArea2(tmp);
 			printf(" (%d px (%d%%))", pixels, (pixels * 100) / full_area);
 			cvReleaseImage(&tmp3d);

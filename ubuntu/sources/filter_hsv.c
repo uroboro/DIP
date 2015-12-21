@@ -31,17 +31,17 @@ int filterByHSV(IplImage *src, CvScalar minHSV, CvScalar maxHSV, IplImage *dst) 
 	//printf("\tmax: %03d,%03d,%03d", (int)maxHSV.val[0], (int)maxHSV.val[1], (int)maxHSV.val[2]);
 
 	if (minHSV.val[0] < maxHSV.val[0]) {
-		cvInRangeS(tmp1dH_mask, cvScalar(minHSV.val[0], 0, 0), cvScalar(maxHSV.val[0], 0, 0), tmp1dH_mask);
+		cvInRangeS(tmp1dH_mask, CV_RGB(minHSV.val[0], 0, 0), CV_RGB(maxHSV.val[0], 0, 0), tmp1dH_mask);
 	} else {
 		IplImage *tmp1d = cvCloneImage(tmp1dH_mask);
-		cvInRangeS(tmp1dH_mask, cvScalar(0, 0, 0), cvScalar(maxHSV.val[0], 0, 0), tmp1d);
-		cvInRangeS(tmp1dH_mask, cvScalar(minHSV.val[0], 0, 0), cvScalar(255, 0, 0), tmp1dH_mask);
+		cvInRangeS(tmp1dH_mask, CV_RGB(0, 0, 0), CV_RGB(maxHSV.val[0], 0, 0), tmp1d);
+		cvInRangeS(tmp1dH_mask, CV_RGB(minHSV.val[0], 0, 0), CV_RGB(255, 0, 0), tmp1dH_mask);
 		cvOr(tmp1d, tmp1dH_mask, tmp1dH_mask, NULL);
 		cvReleaseImage(&tmp1d);
 	}
 
-	cvInRangeS(tmp1dS_mask, cvScalar(minHSV.val[1], 0, 0), cvScalar(maxHSV.val[1], 0, 0), tmp1dS_mask);
-	cvInRangeS(tmp1dV_mask, cvScalar(minHSV.val[2], 0, 0), cvScalar(maxHSV.val[2], 0, 0), tmp1dV_mask);
+	cvInRangeS(tmp1dS_mask, CV_RGB(minHSV.val[1], 0, 0), CV_RGB(maxHSV.val[1], 0, 0), tmp1dS_mask);
+	cvInRangeS(tmp1dV_mask, CV_RGB(minHSV.val[2], 0, 0), CV_RGB(maxHSV.val[2], 0, 0), tmp1dV_mask);
 
 	IplImage *tmp1d_mask = cvCreateImage(cvGetSize(src), IPL_DEPTH_8U, 1);
 	cvSet(tmp1d_mask, cvScalarAll(255), NULL);

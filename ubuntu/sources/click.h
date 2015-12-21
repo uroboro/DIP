@@ -3,7 +3,9 @@
 
 #include <opencv2/core/core_c.h>
 
-typedef struct _click {
+#include "common.h"
+
+DIP_EXTERN typedef struct _click {
 	CvPoint origin;
 	int event;
 	int flags;
@@ -14,16 +16,16 @@ typedef struct _click {
 	int up_edge;
 } Click;
 
-Click makeClick(CvPoint origin, int event, int flags);
-int printClick(Click click);
+DIP_EXTERN Click makeClick(CvPoint origin, int event, int flags);
+DIP_EXTERN int printClick(Click click);
 
-int processClick(Click click);
+DIP_EXTERN int processClick(Click click);
 
-typedef struct _drag {
+DIP_EXTERN typedef struct _drag {
 	CvPoint start;
 	CvPoint end;
 } Drag;
 
-int printDrag(Drag drag);
+DIP_EXTERN int printDrag(Drag drag);
 
 #endif /* CLICK_H */

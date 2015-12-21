@@ -8,7 +8,8 @@ int main(int argc, char *argv[], char *envp[]) {
 #if 01
 	//char name[] = "resources/Edges.png";
 	//char name[] = "resources/Untitled100x100.png";
-	char name[] = "resources/Untitled20x20.png";
+	//char name[] = "resources/Untitled20x20.png";
+	char name[] = "resources/mask.png";
 	IplImage *aaa = cvLoadImage(name, CV_LOAD_IMAGE_GRAYSCALE);
 	IplImage *tmp3d = cvCreateImage(cvGetSize(aaa), IPL_DEPTH_8U, 3);
 	filterByVolume(aaa, tmp3d, 5000);
