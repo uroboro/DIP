@@ -1,9 +1,20 @@
 #include "filter_hsv.h"
+#include <stdio.h>
 #include <opencv2/imgproc/imgproc_c.h>
 #include <opencv2/highgui/highgui_c.h>
 
 #include "fixes.h"
+
 void cvClose(CvArr *src, CvArr *dst, CvArr *mask, size_t n);
+#if SAVE_MASK
+IplImage *tmp_mask = NULL;
+void mouseCallback2(int event, int x, int y, int flags, void* userdata) {
+	if (event == CV_EVENT_LBUTTONDOWN && tmp_mask != NULL) {
+		printf("saving to resources/mask.png\n");
+		cvSaveImage("resources/mask.png", tmp_mask);
+	}
+}
+#endif
 
 int filterByHSV(IplImage *src, CvScalar minHSV, CvScalar maxHSV, IplImage *dst) {
 	IplImage *tmp3d = cvCloneImage(src);
@@ -49,6 +60,14 @@ int filterByHSV(IplImage *src, CvScalar minHSV, CvScalar maxHSV, IplImage *dst) 
 #define CONTROLS_HEIGHTA 480/2
 #if 1
 	cvNamedWindow(CONTROL_WINDOW, 0);
+#if SAVE_MASK
+	if (tmp_mask == NULL) {
+		tmp_mask = cvCloneImage(tmp1d_mask);
+	} else {
+		cvCopy(tmp1d_mask, tmp_mask, NULL);
+	}
+	cvSetMouseCallback(CONTROL_WINDOW, mouseCallback2, NULL);
+#endif
 	cvResizeWindow(CONTROL_WINDOW, CONTROLS_WIDTHA, CONTROLS_HEIGHTA);
 	cvShowImage(CONTROL_WINDOW, tmp1d_mask);
 #endif
