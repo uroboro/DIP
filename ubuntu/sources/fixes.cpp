@@ -62,7 +62,7 @@ int cvFindContours2(IplImage* image, CvMemStorage* storage, CvSeq** first_contou
 }
 
 int cvContourArea2(CvSeq *contour) {
-	IplImage *tmp3d = cvCreateImage(cvGetSize(dst), IPL_DEPTH_8U, 1);
+	IplImage *tmp3d = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 1);
 	cvSet(tmp3d, cvScalarAll(0), NULL);
 	cvDrawContours(tmp3d, contour, cvScalarAll(255), cvScalarAll(255), 0, CV_FILLED, 8, cvPoint(0, 0));
 	int pixels = cvCountNonZero(tmp3d);
