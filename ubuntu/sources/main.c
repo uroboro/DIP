@@ -1,11 +1,7 @@
-// Win32_Console.cpp : Defines the entry point for the console application.
-//
-
-//#include "stdafx.h"
 #include "operateImage.h"
 
 int main(int argc, char *argv[], char *envp[]) {
-#if 01
+#if 0
 	//char name[] = "resources/Edges.png";
 	//char name[] = "resources/Untitled100x100.png";
 	//char name[] = "resources/Untitled20x20.png";
