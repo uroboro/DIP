@@ -15,4 +15,6 @@ DIP_EXTERN int cvContourArea2(CvSeq *contour);
 
 DIP_EXTERN IplImage* createSubArray(IplImage *src, CvRect rect);
 
+DIP_EXTERN void cvRectangle2(CvArr* img, CvRect rect, CvScalar color, int thickness, int line_type, int shift);
+
 #endif /* FIXES_H */

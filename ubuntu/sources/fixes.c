@@ -78,3 +78,9 @@ IplImage* createSubArray(IplImage *src, CvRect rect) {
 	cvSetImageROI(src, prevRect);
 	return dst;
 }
+
+void cvRectangle2(CvArr* img, CvRect rect, CvScalar color, int thickness, int line_type, int shift) {
+	cvRectangle(img, cvPoint(rect.x, rect.y),
+			cvPoint(rect.x + rect.width - 1, rect.y + rect.height - 1),
+			color, thickness, line_type, shift);
+}
