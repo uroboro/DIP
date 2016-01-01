@@ -7,9 +7,19 @@ int main(int argc, char *argv[], char *envp[]) {
 	//char name[] = "resources/Untitled20x20.png";
 	char name[] = "resources/mask.png";
 	IplImage *aaa = cvLoadImage(name, CV_LOAD_IMAGE_GRAYSCALE);
+	if (!aaa) { printf("no image\n"); return 1; }
 	IplImage *tmp3d = cvCreateImage(cvGetSize(aaa), IPL_DEPTH_8U, 3);
-	filterByVolume(aaa, tmp3d, 5000);
-	cvWaitKey(0);
+	cvNamedWindow(INPUT_WINDOW, 0);
+	cvNamedWindow(OUTPUT_WINDOW, 0);
+	cvMoveWindow(OUTPUT_WINDOW, 0, 300);
+	int volume = 0;
+	cvCreateTrackbar("volume", OUTPUT_WINDOW, &volume, 320 * 240, NULL);
+	int key = -1;
+	while ((key = cvWaitKey(50)) != 27) { // wait 50 ms (20 FPS) or for ESC key
+		filterByVolume(aaa, tmp3d, volume);
+		cvResizeWindow(INPUT_WINDOW, 320, 240);
+		cvShowImage(INPUT_WINDOW, tmp3d);
+	}
 	cvReleaseImage(&aaa); cvReleaseImage(&tmp3d);
 	return 0;
 #endif
@@ -40,8 +50,6 @@ int main(int argc, char *argv[], char *envp[]) {
 	cvMoveWindow(OUTPUT_WINDOW, 0, 300);
 
 	cvSetMouseCallback(INPUT_WINDOW, mouseCallback, &userdata);
-
-	setupWindows(&userdata);
 
 	IplImage *input = userdata.input[0];
 
@@ -82,7 +90,6 @@ int main(int argc, char *argv[], char *envp[]) {
 	cvReleaseCapture(&cv_cap);
 
 	freeSessionUserdata(&userdata);
-	destroyWindows(&userdata);
 
 	cvDestroyWindow(INPUT_WINDOW);
 	cvDestroyWindow(OUTPUT_WINDOW);
