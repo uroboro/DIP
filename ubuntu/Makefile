@@ -1,5 +1,5 @@
 findfiles = $(foreach ext, c cpp m mm x xm xi xmi, $(wildcard $(1)/*.$(ext)))
-getobjs = $(filter %.o,$(foreach ext, c cpp m mm x xm xi xmi, $(patsubst %.$(ext),%.o,$(1))))
+getobjs = $(foreach ext, c cpp m mm x xm xi xmi, $(filter %.o,$(patsubst %.$(ext),%.o,$(1))))
 
 OPENCV_CDFLAGS = `pkg-config --cflags opencv`
 OPENCV_LDFLAGS = -L/usr/lib/x86_64-linux-gnu/ `pkg-config --libs opencv`
@@ -14,7 +14,7 @@ LDFLAGS = $(OPENCV_LDFLAGS)
 # -fopenmp
 SOURCES = $(call findfiles,$(SOURCE_DIR))
 OBJECTS = $(patsubst $(SOURCE_DIR)/%,$(OBJ_DIR)/%,$(call getobjs, $(SOURCES)))
-EXECUTABLE = Prueba
+EXECUTABLE = exe
 
 all: $(SOURCES) $(EXECUTABLE)
 
@@ -36,4 +36,4 @@ test: $(EXECUTABLE)
 	@./$(EXECUTABLE)
 
 clean:
-	rm -rf $(OBJECTS) $(EXECUTABLE)
+	rm -rf $(OBJ_DIR) $(EXECUTABLE)
