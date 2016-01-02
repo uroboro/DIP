@@ -1,4 +1,3 @@
-//#include "stdafx.h"
 #include "operateImage.h"
 
 //#pragma mark - Userdata
@@ -38,43 +37,7 @@ void freeSessionUserdata(Userdata *userdata) {
 	cvReleaseImage(&userdata->output[1]);
 }
 
-//#pragma mark - controls
-
-#define SHOW_CONTROLS 1
-#define CONTROLS_WIDTH 400
-#define CONTROLS_HEIGHT 120
-
-void setupWindows(Userdata *userdata) {
-#if SHOW_CONTROLS
-	//cvCreateTrackbar("kernel size", CONTROL_WINDOW, &(userdata.kernelSize), 15, trackbarCallback);
-
-	cvNamedWindow(CONTROL_WINDOW "1", 0);
-	cvResizeWindow(CONTROL_WINDOW "1", CONTROLS_WIDTH, CONTROLS_HEIGHT);
-
-	cvCreateTrackbar("min 0", CONTROL_WINDOW "1", &(userdata->minScalar0), 180, trackbarCallback);
-	cvCreateTrackbar("min 1", CONTROL_WINDOW "1", &(userdata->minScalar1), 255, trackbarCallback);
-	cvCreateTrackbar("min 2", CONTROL_WINDOW "1", &(userdata->minScalar2), 255, trackbarCallback);
-
-	cvNamedWindow(CONTROL_WINDOW "2", 0);
-	cvResizeWindow(CONTROL_WINDOW "2", CONTROLS_WIDTH, CONTROLS_HEIGHT);
-
-	cvCreateTrackbar("max 0", CONTROL_WINDOW "2", &(userdata->maxScalar0), 180, trackbarCallback);
-	cvCreateTrackbar("max 1", CONTROL_WINDOW "2", &(userdata->maxScalar1), 255, trackbarCallback);
-	cvCreateTrackbar("max 2", CONTROL_WINDOW "2", &(userdata->maxScalar2), 255, trackbarCallback);
-
-	//cvCreateTrackbar("value", CONTROL_WINDOW, &(userdata.value), (int)sqrt(cam_height * cam_width), trackbarCallback);
-#endif
-}
-void destroyWindows(Userdata *userdata) {
-#if SHOW_CONTROLS
-	cvDestroyWindow(CONTROL_WINDOW "1");
-	cvDestroyWindow(CONTROL_WINDOW "2");
-#endif
-}
-
 //#pragma mark - Callbacks
-
-void trackbarCallback(int val) {}
 
 void mouseCallback(int event, int x, int y, int flags, void *_userdata) {
 	//printf("Mouse event (%d) with flag (%d) at (%d, %d)", event, flags, x, y);
@@ -119,7 +82,7 @@ void setup(CvSize size) {
 
 	GRAY1D = cvCreateImage(size, IPL_DEPTH_8U, 1);
 	cvSet(GRAY1D, cvScalarAll(127), NULL);
-	
+
 	WHITE1D = cvCreateImage(size, IPL_DEPTH_8U, 1);
 	cvSet(WHITE1D, cvScalarAll(255), NULL);
 }
@@ -159,7 +122,6 @@ void afterProcess(Userdata *userdata) {
 	int height = userdata->size.height;
 	//userdata->square = makeSquare(cvPoint(width * 3 / 4 - 40, height/2 - 40), cvSize(80, 80), CV_RGB(255, 255, 255), 2);
 	drawSquare(userdata->input[0], makeSquare(cvPoint(width * 3 / 4 - 40, height-80), cvSize(80, 80), CV_RGB(255, 255, 255), 2));
-	
 }
 
 #define COND_PRINTF(...) { if (0) printf(__VA_ARGS__); }
@@ -175,38 +137,41 @@ char operateImage(Userdata *userdata) {
 	IplImage *imageOut = userdata->output[0];
 	IplImage *imageOut2 = userdata->output[1];
 
-	IplImage *tmp3d = cvCreateImage(cvGetSize(image1), IPL_DEPTH_8U, 3);
+	IplImage *tmp3d = cvCreateImage(cvGetSize(image1), image1->depth, 3);
 	cvCopy(image1, tmp3d, NULL);
 
 	CvScalar minScalar = cvScalar(userdata->minScalar0, userdata->minScalar1, userdata->minScalar2);
 	CvScalar maxScalar = cvScalar(userdata->maxScalar0, userdata->maxScalar1, userdata->maxScalar2);
 	filterByHSV(tmp3d, minScalar, maxScalar, tmp3d);
 
-#if 0
+
+#define USE_FACE 0
+#if USE_FACE
 	static CvRect face = cvRect(0, 0, 10, 10);
 	static int tick = 0;
+	//userdata->timestep = 100;
 	if ((tick %= 10) == 0) {
-		//userdata->timestep = 100;
 		double scale = 4;
 		CvRect *faces = NULL;
 		double t = 0;
 		int facesCount = findFaces(tmp3d, &faces, scale, &t);
 		face = (facesCount != 0) ? faces[0] : face;
-		free(faces);
 		printf("%d face(s) detected in %g ms :: 1st face at {%d,%d,%d,%d}", facesCount, t, face.x, face.y, face.width, face.height);
-		drawFaces(tmp3d, 1, &face);
+		//drawFaces(tmp3d, 1, &face);
+		drawFaces(tmp3d, facesCount, faces);
+		free(faces);
 	}
 	tick++;
 
 #endif
-#if 0
+#if USE_FACE && USE_SUBIMAGE
 	//face extraction
 	IplImage *subimage = createSubArray(tmp3d, face);
 	cvNamedWindow(CONTROL_WINDOW  "face", 0);
 	cvResizeWindow(CONTROL_WINDOW "face", subimage->width, subimage->height);
 	cvShowImage(CONTROL_WINDOW    "face", subimage);
 #endif
-#if 0
+#if USE_SUBIMAGE && USE_HISTOGRAM
 	//face histogram
 	IplImage *subimage2 = cvCloneImage(subimage);
 	cvCvtColor(subimage2, subimage2, CV_BGR2HSV);
@@ -228,16 +193,14 @@ char operateImage(Userdata *userdata) {
 		}
 		free(bins);
 	}
-#endif
-#if 0
+
 	if (subimage->width > 10 && subimage->height > 10)
 	graficarHistograma(subimage, binsCount, bins);
 	cvNamedWindow(CONTROL_WINDOW  "42", 0);
 	cvResizeWindow(CONTROL_WINDOW "42", subimage->width, subimage->height);
 	cvShowImage(CONTROL_WINDOW    "42", subimage);
 #endif
-
-#if 0
+#if USE_SUBIMAGE && 0
 	int minH = (int)maxValues.val[0] - 20;
 	int maxH = (int)maxValues.val[0] + 20;
 	int minS = (int)maxValues.val[1] - 20;
@@ -258,8 +221,7 @@ char operateImage(Userdata *userdata) {
 	cvResizeWindow(CONTROL_WINDOW "41", subimage2->width, subimage2->height);
 	cvShowImage(CONTROL_WINDOW "41", subimage2);
 #endif
-
-#if 0
+#if USE_SUBIMAGE
 	cvReleaseImage(&subimage);
 	cvReleaseImage(&subimage2);
 #endif
@@ -268,7 +230,6 @@ char operateImage(Userdata *userdata) {
 	cvCopy(imageOut, imageOut2, NULL);
 	cvCopy(tmp3d, imageOut, NULL);
 
-	//cvReleaseImage(&tmp1d);
 	cvReleaseImage(&tmp3d);
 
 	//afterProcess(userdata);
