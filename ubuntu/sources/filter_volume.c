@@ -5,8 +5,6 @@
 
 #include "fixes.h"
 
-#define CVSHOW(name, x, y, w, h, image) { cvNamedWindow(name, 0); cvMoveWindow(name, x, y); cvResizeWindow(name, w, h); cvShowImage(name, image); }
-
 int aaaaaa;
 int recursiveContoursDescription(IplImage *src, CvSeq *contours, int full_area, long minVolume, int indent) {
 	int area_total = 0;
@@ -14,9 +12,9 @@ int recursiveContoursDescription(IplImage *src, CvSeq *contours, int full_area, 
 	CvSeq *tmp = contours;
 
 	for (int i = 0; tmp != NULL; tmp = tmp->h_next, i++) {
-		for (int t = 0; t < indent; t++) printf(" ");
+		//for (int t = 0; t < indent; t++) printf(" ");
 		int area = (int)cvContourArea(tmp, CV_WHOLE_SEQ, 0);
-		printf("%d area:%d px (%d%%)", i, area, (area * 100) / full_area);
+		//printf("%d area:%d px (%d%%)", i, area, (area * 100) / full_area);
 
 		if (1) {
 			IplImage *tmp3d = cvCloneImage(src);
@@ -31,10 +29,10 @@ int recursiveContoursDescription(IplImage *src, CvSeq *contours, int full_area, 
 			CVSHOW(varname, 150 + 300 * aaaaaa + 10 * indent, 100 + 50 * i, 200, 200, tmp3d);
 #endif
 			int pixels = cvContourArea2(tmp);
-			printf(" (%d px (%d%%))", pixels, (pixels * 100) / full_area);
+			//printf(" (%d px (%d%%))", pixels, (pixels * 100) / full_area);
 			cvReleaseImage(&tmp3d);
 		}
-		printf("\n");
+		//printf("\n");
 		area_total += area;
 		area_total += recursiveContoursDescription(src, tmp->v_next, full_area, minVolume, indent + 1);
 	}
@@ -46,16 +44,49 @@ int recursiveContoursDraw(IplImage *dst, CvSeq *contours, long minVolume, int in
 	CvSeq *tmp = contours;
 	for (int i = 0; tmp != NULL; tmp = tmp->h_next, i++) {
 		int pixels = cvContourArea2(tmp);
-		CvScalar colorpx1 = (pixels < minVolume) ? CV_RGB(0, 0, 0) : CV_RGB(0, 255, 0);
-		CvScalar colorpx2 = CV_RGB(127,127,127);//CV_RGB(0, 64, 16 * indent + cc % 128);
-		recursiveContoursDraw(dst, tmp->v_next, minVolume, indent + 1);
-		cvDrawContours(dst, tmp, colorpx1, colorpx2, -1, (pixels < minVolume) ? -1 : 0, 8, cvPoint(0, 0));
+		char condition = pixels < minVolume / 5;
+		CvScalar colorpx1 = (condition) ? (indent % 2) ? cvScalarAll(255) : cvScalarAll(0) : (indent % 2) ? cvScalarAll(0) : cvScalarAll(255);
+		CvScalar colorpx2 = (indent % 2) ? cvScalarAll(0) : cvScalarAll(255);
+		recursiveContoursDraw(dst, tmp->v_next, pixels, indent + 1);
+		cvDrawContours(dst, tmp, colorpx1, colorpx2, -1, (condition) ? -1 : 0, 8, cvPoint(0, 0));
 	}
 	return 0;
 }
 
 int filterByVolume(IplImage *src, IplImage *dst, long minVolume) {
-	printf("total area:%d\n", src->width * src->height);
+	//printf("total area:%d\n", src->width * src->height);
+{
+	IplImage *tmp3d = NULL;
+	IplImage *tmp1d = NULL;
+	if (src->nChannels == 1) {
+		tmp3d = cvCreateImage(cvGetSize(src), src->depth, 3);
+		cvMerge(src, src, src, NULL, tmp3d);
+		tmp1d = cvCloneImage(src);
+	} else {
+		tmp3d = cvCloneImage(src);
+		tmp1d = cvCreateImage(cvGetSize(src), src->depth, 1);
+		cvCvtColor(src, tmp1d, CV_BGR2GRAY);
+	}
+	//CVSHOW("orig0", 800, 0, 320, 240, tmp3d);
+
+	CvMemStorage *storage = cvCreateMemStorage(0);
+	CvSeq *contours = NULL;
+	int n = cvFindContours2(tmp1d, storage, &contours, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_NONE, cvPoint(0, 0));
+	cvReleaseImage(&tmp1d);
+	//printf("%d(%d) contours\n", n, contours->total);
+
+	int area = recursiveContoursDescription(src, contours, src->width * src->height, minVolume, 0);
+	//printf("counted area:%d\n", area);
+	recursiveContoursDraw(tmp3d, contours, minVolume, 0);
+
+	cvReleaseMemStorage(&storage);
+	cvCvtColor(tmp3d, dst, CV_BGR2GRAY);
+	cvReleaseImage(&tmp3d);
+	//CVSHOW("volume", 800, 0, 320, 240, dst);
+	//printf("\n");
+}
+
+if (0)
 {
 	IplImage *tmp3d = cvCreateImage(cvGetSize(src), IPL_DEPTH_8U, 3);
 	cvMerge(src, src, src, NULL, tmp3d);
