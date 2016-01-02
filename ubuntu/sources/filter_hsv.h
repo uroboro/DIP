@@ -5,6 +5,8 @@
 
 #include "common.h"
 
+DIP_EXTERN int maskByHSV(IplImage *src, CvScalar minHSV, CvScalar maxHSV, IplImage *dst);
+
 DIP_EXTERN int filterByHSV(IplImage *src, CvScalar minHSV, CvScalar maxHSV, IplImage *dst);
 
 #endif /* FILTER_HSV_H */

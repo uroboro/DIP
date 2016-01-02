@@ -5,18 +5,34 @@
 
 #include "fixes.h"
 
-void cvClose(CvArr *src, CvArr *dst, CvArr *mask, size_t n);
-#if SAVE_MASK
-IplImage *tmp_mask = NULL;
-void mouseCallback2(int event, int x, int y, int flags, void* userdata) {
-	if (event == CV_EVENT_LBUTTONDOWN && tmp_mask != NULL) {
-		printf("saving to resources/mask.png\n");
-		cvSaveImage("resources/mask.png", tmp_mask);
-	}
-}
-#endif
+#define CONTROL_WINDOW	"HSV Control Window"
+#define CONTROLS_WIDTH 400
+#define CONTROLS_HEIGHT 100
 
-int filterByHSV(IplImage *src, CvScalar minHSV, CvScalar maxHSV, IplImage *dst) {
+static void trackbarCallback(int val) {}
+
+static void setupWindows(int *a, int *b, int *c, int *d, int *e, int *f) {
+	cvNamedWindow(CONTROL_WINDOW  "1", 0);
+	cvResizeWindow(CONTROL_WINDOW "1", CONTROLS_WIDTH, CONTROLS_HEIGHT);
+
+	cvCreateTrackbar("min 0", CONTROL_WINDOW "1", a, 180, trackbarCallback);
+	cvCreateTrackbar("min 1", CONTROL_WINDOW "1", b, 255, trackbarCallback);
+	cvCreateTrackbar("min 2", CONTROL_WINDOW "1", c, 255, trackbarCallback);
+
+	cvNamedWindow(CONTROL_WINDOW  "2", 0);
+	cvResizeWindow(CONTROL_WINDOW "2", CONTROLS_WIDTH, CONTROLS_HEIGHT);
+
+	cvCreateTrackbar("max 0", CONTROL_WINDOW "2", d, 180, trackbarCallback);
+	cvCreateTrackbar("max 1", CONTROL_WINDOW "2", e, 255, trackbarCallback);
+	cvCreateTrackbar("max 2", CONTROL_WINDOW "2", f, 255, trackbarCallback);
+}
+
+static void destroyWindows(void) {
+	cvDestroyWindow(CONTROL_WINDOW "1");
+	cvDestroyWindow(CONTROL_WINDOW "2");
+}
+
+DIP_EXTERN int maskByHSV(IplImage *src, CvScalar minHSV, CvScalar maxHSV, IplImage *dst_mask) {
 	IplImage *tmp3d = cvCloneImage(src);
 	cvSmooth(tmp3d, tmp3d, CV_GAUSSIAN, 9, 0, 0, 0);
 
@@ -31,17 +47,17 @@ int filterByHSV(IplImage *src, CvScalar minHSV, CvScalar maxHSV, IplImage *dst) 
 	//printf("\tmax: %03d,%03d,%03d", (int)maxHSV.val[0], (int)maxHSV.val[1], (int)maxHSV.val[2]);
 
 	if (minHSV.val[0] < maxHSV.val[0]) {
-		cvInRangeS(tmp1dH_mask, CV_RGB(minHSV.val[0], 0, 0), CV_RGB(maxHSV.val[0], 0, 0), tmp1dH_mask);
+		cvInRangeS(tmp1dH_mask, cvScalarAll(minHSV.val[0]), cvScalarAll(maxHSV.val[0]), tmp1dH_mask);
 	} else {
 		IplImage *tmp1d = cvCloneImage(tmp1dH_mask);
-		cvInRangeS(tmp1dH_mask, CV_RGB(0, 0, 0), CV_RGB(maxHSV.val[0], 0, 0), tmp1d);
-		cvInRangeS(tmp1dH_mask, CV_RGB(minHSV.val[0], 0, 0), CV_RGB(255, 0, 0), tmp1dH_mask);
+		cvInRangeS(tmp1dH_mask, cvScalarAll(0), cvScalarAll(maxHSV.val[0]), tmp1d);
+		cvInRangeS(tmp1dH_mask, cvScalarAll(minHSV.val[0]), cvScalarAll(255), tmp1dH_mask);
 		cvOr(tmp1d, tmp1dH_mask, tmp1dH_mask, NULL);
 		cvReleaseImage(&tmp1d);
 	}
 
-	cvInRangeS(tmp1dS_mask, CV_RGB(minHSV.val[1], 0, 0), CV_RGB(maxHSV.val[1], 0, 0), tmp1dS_mask);
-	cvInRangeS(tmp1dV_mask, CV_RGB(minHSV.val[2], 0, 0), CV_RGB(maxHSV.val[2], 0, 0), tmp1dV_mask);
+	cvInRangeS(tmp1dS_mask, cvScalarAll(minHSV.val[1]), cvScalarAll(maxHSV.val[1]), tmp1dS_mask);
+	cvInRangeS(tmp1dV_mask, cvScalarAll(minHSV.val[2]), cvScalarAll(maxHSV.val[2]), tmp1dV_mask);
 
 	IplImage *tmp1d_mask = cvCreateImage(cvGetSize(src), IPL_DEPTH_8U, 1);
 	cvSet(tmp1d_mask, cvScalarAll(255), NULL);
@@ -53,28 +69,21 @@ int filterByHSV(IplImage *src, CvScalar minHSV, CvScalar maxHSV, IplImage *dst) 
 	cvReleaseImage(&tmp1dS_mask);
 	cvReleaseImage(&tmp1dV_mask);
 
-	cvClose(tmp1d_mask, tmp1d_mask, NULL, 2);
+	cvCopy(tmp1d_mask, dst_mask, NULL);
+	cvReleaseImage(&tmp1d_mask);
+	//CVSHOW("hsv mask", 600, 0, 320, 240, dst_mask);
+	//cvSaveImage("resources/mask.png", dst_mask, NULL);
 
-#define CONTROL_WINDOW	"Control Window"
-#define CONTROLS_WIDTHA  640/2
-#define CONTROLS_HEIGHTA 480/2
-#if 1
-	cvNamedWindow(CONTROL_WINDOW, 0);
-#if SAVE_MASK
-	if (tmp_mask == NULL) {
-		tmp_mask = cvCloneImage(tmp1d_mask);
-	} else {
-		cvCopy(tmp1d_mask, tmp_mask, NULL);
-	}
-	cvSetMouseCallback(CONTROL_WINDOW, mouseCallback2, NULL);
-#endif
-	cvResizeWindow(CONTROL_WINDOW, CONTROLS_WIDTHA, CONTROLS_HEIGHTA);
-	cvShowImage(CONTROL_WINDOW, tmp1d_mask);
-#endif
+	return 0;
+}
+
+int filterByHSV(IplImage *src, CvScalar minHSV, CvScalar maxHSV, IplImage *dst) {
+	IplImage *tmp1d_mask = cvCreateImage(cvGetSize(src), IPL_DEPTH_8U, 1);
+	maskByHSV(src, minHSV, maxHSV, tmp1d_mask);
 
 	cvCopy2(src, dst, tmp1d_mask);
-
 	cvReleaseImage(&tmp1d_mask);
+	//CVSHOW("hsv ", 600, 300, 320, 240, dst);
 
 	return 0;
 }
