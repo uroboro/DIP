@@ -1,37 +1,6 @@
 #include "operateImage.h"
 
 int main(int argc, char *argv[], char *envp[]) {
-#if 0
-	//char name[] = "resources/Edges.png";
-	//char name[] = "resources/Untitled100x100.png";
-	//char name[] = "resources/Untitled20x20.png";
-	char name[] = "resources/mask.png";
-	IplImage *aaa = cvLoadImage(name, CV_LOAD_IMAGE_GRAYSCALE);
-	if (!aaa) { printf("no image\n"); return 1; }
-	IplImage *tmp3d = cvCreateImage(cvGetSize(aaa), IPL_DEPTH_8U, 3);
-	cvNamedWindow(INPUT_WINDOW, 0);
-	cvNamedWindow(OUTPUT_WINDOW, 0);
-	cvMoveWindow(OUTPUT_WINDOW, 0, 300);
-	int volume = 0;
-	cvCreateTrackbar("volume", OUTPUT_WINDOW, &volume, 320 * 240, NULL);
-	int key = -1;
-	while ((key = cvWaitKey(50)) != 27) { // wait 50 ms (20 FPS) or for ESC key
-		filterByVolume(aaa, tmp3d, volume);
-		cvResizeWindow(INPUT_WINDOW, 320, 240);
-		cvShowImage(INPUT_WINDOW, tmp3d);
-	}
-	cvReleaseImage(&aaa); cvReleaseImage(&tmp3d);
-	return 0;
-#endif
-#if 0
-	char name[] = "/home/uroboro/Downloads/floating_palace_by_jonone.jpg";
-	IplImage *aaa = cvLoadImage(name, -1);
-	if (!aaa) { printf("no image\n"); return 1; }
-	cvNamedWindow(name, 0); cvResizeWindow(name, aaa->width, aaa->height); cvShowImage(name, aaa);
-	cvWaitKey(0); cvReleaseImage(&aaa); cvDestroyWindow(name);
-	return 0;
-#endif
-
 	CvCapture *cv_cap = cvCaptureFromCAM(CV_CAP_ANY);
 	if (!cv_cap) {
 		printf("E: Could not open camera.\n");
