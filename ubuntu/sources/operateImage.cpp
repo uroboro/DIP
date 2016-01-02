@@ -127,6 +127,98 @@ void afterProcess(Userdata *userdata) {
 #define COND_PRINTF(...) { if (0) printf(__VA_ARGS__); }
 #define LS printf("%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
 
+void goodCorners(IplImage *src, IplImage *dst, size_t n) {
+	IplImage *tmp1d = NULL;
+	if (src->nChannels == 1) {
+		tmp1d = cvCloneImage(src);
+	} else {
+		tmp1d = cvCreateImage(cvGetSize(src), src->depth, 1);
+		cvCvtColor(src, tmp1d, CV_BGR2GRAY);
+	}
+	int corner_count = 20;
+	CvPoint2D32f* corners = (CvPoint2D32f *)calloc(corner_count, sizeof(CvPoint2D32f));
+	double quality_level = 0.1;
+	double min_distance = 10;
+	CvArr* mask = NULL;
+	int block_size = 3;
+	int use_harris = 0;
+	double k = 0.04;
+	cvGoodFeaturesToTrack(tmp1d, NULL, NULL, corners, &corner_count, quality_level, min_distance, mask, block_size, use_harris, k);
+
+	for (int i = 0; i < corner_count; i++) {
+		drawCircle(dst, makeCircle(cvPointFrom32f(corners[i]), 5, cvScalar(0, 255, 255, 0), 1));
+	}
+	free(corners);
+}
+
+void houghLines(IplImage *src, IplImage *dst) {
+	IplImage *tmp1d = NULL;
+	if (src->nChannels == 1) {
+		tmp1d = cvCloneImage(src);
+	} else {
+		tmp1d = cvCreateImage(cvGetSize(src), src->depth, 1);
+		cvCvtColor(src, tmp1d, CV_BGR2GRAY);
+	}
+	cvCanny(tmp1d, tmp1d, 50, 200, 3);
+	std::vector<cv::Vec4i> lines;
+	HoughLinesP(cv::Mat(tmp1d), lines, 1, CV_PI/180, 50, 50, 10);
+	for (size_t i = 0; i < lines.size(); i++) {
+		cv::Vec4i l = lines[i];
+		cvLine(dst, cvPoint(l[0], l[1]), cvPoint(l[2], l[3]), CV_RGB(0,0,255), 3, CV_AA);
+	}
+}
+
+void doFaces(IplImage *src, IplImage *dst, double scale) {
+	// Make image grayscale
+	IplImage *tmp1d = NULL;
+	if (src->nChannels == 1) {
+		tmp1d = cvCloneImage(src);
+	} else {
+		tmp1d = cvCreateImage(cvGetSize(src), src->depth, 1);
+		cvCvtColor(src, tmp1d, CV_BGR2GRAY);
+	}
+
+	// Scale down image
+	CvSize srcSize = cvGetSize(src);
+	double fx = 1 / scale;
+	srcSize.width = (int)cvRound(fx * srcSize.width);
+	srcSize.height = (int)cvRound(fx * srcSize.height);
+
+	IplImage *smallImg = cvCreateImage(srcSize, IPL_DEPTH_8U, 1);
+	cvResize(tmp1d, smallImg, CV_INTER_LINEAR);
+	cvReleaseImage(&tmp1d);
+
+	cvEqualizeHist(smallImg, smallImg);
+
+	double scale_factor = 1.1;
+	int min_neighbors = 3;
+	int flags = 0
+		//|CASCADE_FIND_BIGGEST_OBJECT
+		//|CASCADE_DO_ROUGH_SEARCH
+		| cv::CASCADE_SCALE_IMAGE;
+	CvSize min_size = cvSize(0,0);
+	CvSize max_size = cvSize(100,100);
+	std::vector<cv::Rect> objects;
+	static cv::CascadeClassifier cascade;
+	if (cascade.empty() && !cascade.load("resources/haarcascade_frontalface_alt.xml")) {
+		printf("ERROR: Could not load classifier cascade\n");
+		return;
+	}
+	cascade.detectMultiScale(smallImg, objects, scale_factor, min_neighbors, flags, min_size, max_size);
+	cvReleaseImage(&smallImg);
+
+	printf("found %ld objects\r", objects.size());
+	for (size_t i = 0; i < objects.size(); i++) {
+		objects[i].x *= scale;
+		objects[i].y *= scale;
+		objects[i].width *= scale;
+		objects[i].height *= scale;
+	}
+	for (std::vector<cv::Rect>::const_iterator r = objects.begin(); r != objects.end(); r++) {
+		cvRectangle2(dst, (CvRect)*r, cvScalar(0, 0, 255, 0), 3, 8, 0);
+	}
+}
+
 char operateImage(Userdata *userdata) {
 	if (!userdata) {
 		return 0;
@@ -142,8 +234,18 @@ char operateImage(Userdata *userdata) {
 
 	CvScalar minScalar = cvScalar(userdata->minScalar0, userdata->minScalar1, userdata->minScalar2);
 	CvScalar maxScalar = cvScalar(userdata->maxScalar0, userdata->maxScalar1, userdata->maxScalar2);
-	filterByHSV(tmp3d, minScalar, maxScalar, tmp3d);
+	//filterByHSV(tmp3d, minScalar, maxScalar, tmp3d);
 
+	IplImage *tmp1d = cvCreateImage(cvGetSize(image1), image1->depth, 1);
+	maskByHSV(tmp3d, minScalar, maxScalar, tmp1d);
+	filterByVolume(tmp1d, tmp1d, tmp1d->width * tmp1d->height / 100);
+	cvSmooth(tmp1d, tmp1d, CV_GAUSSIAN, 11, 0, 0, 0);
+	cvThreshold(tmp1d, tmp1d, 127, 255, CV_THRESH_BINARY);
+	CVSHOW("smoothed", 800, 300, 320, 240, tmp1d);
+	cvCopy2(tmp3d, tmp3d, tmp1d);
+	//goodCorners(tmp1d, tmp3d, 30);
+	//houghLines(tmp3d, tmp3d);
+	doFaces(image1, tmp3d, 4);
 
 #define USE_FACE 0
 #if USE_FACE
