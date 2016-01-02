@@ -6,13 +6,13 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui_c.h>
 #include <opencv2/imgproc/imgproc_c.h>
+#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
 
 #define TRY(...) { try { __VA_ARGS__ } catch (cv::Exception *e) { fprintf(stderr, "%s", e->what()); } }
 
 #define INPUT_WINDOW	"Input Window"
 #define OUTPUT_WINDOW	"Output Window"
-#define CONTROL_WINDOW	"Control Window"
 
 #include "common.h"
 #include "click.h"
@@ -53,9 +53,6 @@ DIP_EXTERN typedef struct _userdata {
 
 DIP_EXTERN Userdata getSessionUserdata(CvSize size);
 DIP_EXTERN void freeSessionUserdata(Userdata *userdata);
-
-DIP_EXTERN void setupWindows(Userdata *userdata);
-DIP_EXTERN void destroyWindows(Userdata *userdata);
 
 DIP_EXTERN void cvClose(CvArr *src, CvArr *dst, CvArr *mask, size_t n);
 DIP_EXTERN char operateImage(Userdata *userdata);
