@@ -10,6 +10,10 @@
 #include "ocv_histogram.h"
 #include "ocv_histogramac.h"
 
+#include "fixes.h"
+#include "filter_volume.h"
+#include "filter_hsv.h"
+
 CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSMutableDictionary *options) {
 	if (!imageRef0) { present(1, "!imageRef0"); return nil; }
 	//if (!imageRef1) { present(1, "!imageRef1"); return nil; }
@@ -31,6 +35,7 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 		unsigned int lThreshold = 50;
 		unsigned int hThreshold = 200;
 		switch (operation) {
+#if 0
 		case 1:
 			iplImageOut = ocv_samplify(iplImage, samples);
 			break;
@@ -147,28 +152,30 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 			iplImageOut = tmp3d;
 			}
 			break;
-
-		case 13: // Hue + Otsu
+#endif
+		default:
 			{
-			IplImage *tmp3d = cvCreateImage(cvGetSize(iplImage), IPL_DEPTH_8U, 3);
-			IplImage *tmp1d = cvCreateImage(cvGetSize(iplImage), IPL_DEPTH_8U, 1);
+			IplImage *tmp3d = cvCreateImage(cvGetSize(iplImage), iplImage->depth, 3);
+			cvCvtColor(iplImage, tmp3d, CV_RGB2BGR);
 
-			cvCvtColor(iplImage, tmp3d, CV_RGB2HSV);
-			cvSplit(tmp3d, tmp1d, NULL, NULL, NULL);
+			CvScalar minScalar = cvScalar(160, 30, 50, 0);
+			CvScalar maxScalar = cvScalar(30, 255, 255, 255);
 
-			cvSmooth(tmp1d, tmp1d, CV_GAUSSIAN, kernelSize + 2, 0, 0, 0);
+			IplImage *tmp1d = cvCreateImage(cvGetSize(iplImage), iplImage->depth, 1);
+			maskByHSV(tmp3d, minScalar, maxScalar, tmp1d);
 
-			cvThreshold(tmp1d, tmp1d, 0, 255, CV_THRESH_OTSU);
+			filterByVolume(tmp1d, tmp1d, tmp1d->width * tmp1d->height / 100);
+			cvSmooth(tmp1d, tmp1d, CV_GAUSSIAN, 11, 0, 0, 0);
+			cvThreshold(tmp1d, tmp1d, 127, 255, CV_THRESH_BINARY);
+			cvCopy2(tmp3d, tmp3d, tmp1d);
+			cvCvtColor(tmp3d, tmp3d, CV_BGR2RGB);
 
-			cvMerge(tmp1d, tmp1d, tmp1d, NULL, tmp3d);
 			cvReleaseImage(&tmp1d);
 
 			iplImageOut = tmp3d;
 			}
-			break;
 
-		default:
-			iplImageOut = cvCloneImage(iplImage);
+			//iplImageOut = cvCloneImage(iplImage);
 			break;
 		}
 	}
