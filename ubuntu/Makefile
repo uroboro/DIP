@@ -4,33 +4,37 @@ getobjs = $(foreach ext, c cpp m mm x xm xi xmi, $(filter %.o,$(patsubst %.$(ext
 OPENCV_CDFLAGS = `pkg-config --cflags opencv`
 OPENCV_LDFLAGS = -L/usr/lib/x86_64-linux-gnu/ `pkg-config --libs opencv`
 #-stdlib=libc++
+# -fopenmp
 
-SOURCE_DIR = sources
-OBJ_DIR = .objs
+DIP_FILES = $(call findfiles,sources) $(call findfiles,../shared)
+DIP_CFLAGS = $(OPENCV_CFLAGS) -c -Wall -O3 -I ../shared
+DIP_LDFLAGS = $(OPENCV_LDFLAGS)
 
 CC = g++
-CFLAGS = $(OPENCV_CFLAGS) -c -Wall -O3
-LDFLAGS = $(OPENCV_LDFLAGS)
-# -fopenmp
-SOURCES = $(call findfiles,$(SOURCE_DIR))
-OBJECTS = $(patsubst $(SOURCE_DIR)/%,$(OBJ_DIR)/%,$(call getobjs, $(SOURCES)))
+OBJ_DIR = .objs
+OBJECTS = $(patsubst %,$(OBJ_DIR)/%,$(call getobjs, $(DIP_FILES)))
 EXECUTABLE = exe
 
-all: $(SOURCES) $(EXECUTABLE)
+all: $(DIP_FILES) $(EXECUTABLE)
 
-$(OBJ_DIR)/%.o: $(SOURCE_DIR)/%.c
-	@mkdir -p .objs
-	@echo "==> Compilando" $<
-	$(CC) $(CFLAGS) -x c $< -o $@
+$(OBJECTS): | $(OBJ_DIR)
 
-$(OBJ_DIR)/%.o: $(SOURCE_DIR)/%.cpp
-	@mkdir -p .objs
+$(OBJ_DIR):
+	@mkdir -p $@
+
+$(OBJ_DIR)/%.o: %.c
+	@mkdir -p `dirname $@`
 	@echo "==> Compilando" $<
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(DIP_CFLAGS) -x c $< -o $@
+
+$(OBJ_DIR)/%.o: %.cpp
+	@mkdir -p `dirname $@`
+	@echo "==> Compilando" $<
+	$(CC) $(DIP_CFLAGS) $< -o $@
 
 $(EXECUTABLE): $(OBJECTS)
 	@echo -e "==> Linker"
-	$(CC) $^ -o $@ $(LDFLAGS)
+	$(CC) $^ -o $@ $(DIP_LDFLAGS)
 
 test: $(EXECUTABLE)
 	@./$(EXECUTABLE)
