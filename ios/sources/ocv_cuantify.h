@@ -5,6 +5,6 @@
 
 #include "common.h"
 
-DIP_EXTERN IplImage *ocv_cuantify(IplImage *image, unsigned int colorDepth);
+DIP_EXTERN void ocvCuantify(IplImage *src, IplImage *dst, unsigned int colorDepth);
 
 #endif /* OCV_CUANTIFY_H */
