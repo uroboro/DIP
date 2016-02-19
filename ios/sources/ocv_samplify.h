@@ -5,6 +5,6 @@
 
 #include "common.h"
 
-DIP_EXTERN IplImage *ocv_samplify(IplImage *image, unsigned int sampleSize);
+DIP_EXTERN void ocvSamplify(IplImage *src, IplImage *dst, unsigned int sampleSize);
 
 #endif /* OCV_SAMPLIFY_H */
