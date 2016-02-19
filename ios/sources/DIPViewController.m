@@ -138,6 +138,7 @@ UIKIT_EXTERN NSString *rvcName(void) {
 
 - (void)swapCamera {
 	[_imageOperator swapCamera];
+	self.title = [@"Camera" stringByAppendingString:(_imageOperator.camera.devicePosition == AVCaptureDevicePositionBack) ? @" Back":@" Front"];
 }
 
 - (void)captureImage {
@@ -235,7 +236,10 @@ UIKIT_EXTERN NSString *rvcName(void) {
 
 	cameraUI.delegate = delegate;
 
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	[controller presentModalViewController:cameraUI animated:YES];
+	#pragma clang diagnostic pop
 	return YES;
 }
 
@@ -243,7 +247,10 @@ UIKIT_EXTERN NSString *rvcName(void) {
 
 // For responding to the user tapping Cancel.
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	[self dismissModalViewControllerAnimated:YES];
+	#pragma clang diagnostic pop
 	[picker release];
 }
 

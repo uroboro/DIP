@@ -24,10 +24,17 @@ AVCaptureSession *createCaptureSession(id<AVCaptureVideoDataOutputSampleBufferDe
 - (void)setFPS:(int32_t)fps {
 	if (kCFCoreFoundationVersionNumber <= 700) {
 		AVCaptureVideoDataOutput *output = (AVCaptureVideoDataOutput *)_session.outputs[0];
+
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		output.minFrameDuration = CMTimeMake(1, fps);
+		#pragma clang diagnostic pop
 	} else {
 		if (_connection) {
+			#pragma clang diagnostic push
+			#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 			[_connection setVideoMinFrameDuration:CMTimeMake(1, fps)];
+			#pragma clang diagnostic pop
 		}
 	}
 }
@@ -145,8 +152,10 @@ AVCaptureVideoDataOutput *createCaptureDeviceOutputWithDelegate(id<AVCaptureVide
 					[NSNumber numberWithInt:kCVPixelFormatType_32BGRA]
 					forKey:(id)kCVPixelBufferPixelFormatTypeKey];
 
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	output.minFrameDuration = CMTimeMake(1, 30);
-
+	#pragma clang diagnostic pop
 	return output;
 }
 
@@ -197,16 +206,16 @@ CGImageRef createCGImageRefFromSampleBuffer(CMSampleBufferRef sampleBuffer, BOOL
 	CVImageBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
 	// Lock the base address of the pixel buffer
 	CVPixelBufferLockBaseAddress(imageBuffer, 0);
- 
+
 	// Get the number of bytes per row for the pixel buffer
 	void *baseAddress = CVPixelBufferGetBaseAddress(imageBuffer);
- 
+
 	// Get the number of bytes per row for the pixel buffer
 	size_t bytesPerRow = CVPixelBufferGetBytesPerRow(imageBuffer);
 	// Get the pixel buffer width and height
 	size_t width = CVPixelBufferGetWidth(imageBuffer);
 	size_t height = CVPixelBufferGetHeight(imageBuffer);
- 
+
 	// Create a device-dependent RGB color space
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 	// Create a bitmap graphics context with the sample buffer data
@@ -216,7 +225,7 @@ CGImageRef createCGImageRefFromSampleBuffer(CMSampleBufferRef sampleBuffer, BOOL
 	CGImageRef quartzImage = CGBitmapContextCreateImage(context);
 	// Unlock the pixel buffer
 	CVPixelBufferUnlockBaseAddress(imageBuffer, 0);
- 
+
 	// Free up the context and color space
 	CGContextRelease(context);
 	CGColorSpaceRelease(colorSpace);
