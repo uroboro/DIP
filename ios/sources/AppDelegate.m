@@ -160,6 +160,7 @@ UIKIT_EXTERN NSString *rvcName(void);
 
 - (NSUInteger)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
 // Available in iOS 6.0 and later.
+	return UIInterfaceOrientationMaskPortrait;
 	return UIInterfaceOrientationMaskAllButUpsideDown;
 }
 
