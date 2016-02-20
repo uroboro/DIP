@@ -84,3 +84,14 @@ void cvRectangle2(CvArr* img, CvRect rect, CvScalar color, int thickness, int li
 			cvPoint(rect.x + rect.width - 1, rect.y + rect.height - 1),
 			color, thickness, line_type, shift);
 }
+
+void cvFillConvexPoly2(CvArr* img, CvSeq *points, CvScalar color, int line_type, int shift) {
+	CvPoint *pts = calloc(points->total, sizeof(CvPoint));
+	if (pts) {
+		for (int i = 0; i < points->total; i++) {
+			pts[i] = *CV_GET_SEQ_ELEM(CvPoint, points, i);
+		}
+		cvFillConvexPoly(img, pts, points->total, color, line_type, shift);
+		free(points);
+	}
+}

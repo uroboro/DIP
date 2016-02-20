@@ -17,4 +17,6 @@ DIP_EXTERN IplImage* createSubArray(IplImage *src, CvRect rect);
 
 DIP_EXTERN void cvRectangle2(CvArr* img, CvRect rect, CvScalar color, int thickness, int line_type, int shift);
 
+DIP_EXTERN void cvFillConvexPoly2(CvArr* img, CvSeq *points, CvScalar color, int line_type, int shift);
+
 #endif /* FIXES_H */
