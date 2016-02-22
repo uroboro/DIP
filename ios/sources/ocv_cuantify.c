@@ -15,7 +15,7 @@ void ocvCuantify(IplImage *src, IplImage *dst, unsigned int colorDepth) {
 				  cuantifyEquation(p.val[0], colorDepth)
 				, cuantifyEquation(p.val[1], colorDepth)
 				, cuantifyEquation(p.val[2], colorDepth)
-				, 255);
+				, p.val[3]);
 			cvSet2D(dst, y, x, q);
 		}
 	}
