@@ -21,4 +21,6 @@ DIP_EXTERN void cvRectangle2(CvArr* img, CvRect rect, CvScalar color, int thickn
 
 DIP_EXTERN void cvFillConvexPoly2(CvArr* img, CvSeq *points, CvScalar color, int line_type, int shift);
 
+DIP_EXTERN void cvBox2(CvArr* img, CvBox2D rect, CvScalar color, int thickness, int line_type, int shift);
+
 #endif /* FIXES_H */
