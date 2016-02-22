@@ -7,6 +7,8 @@
 
 DIP_EXTERN void cvCopy2(CvArr *src, CvArr *dst, CvArr *mask);
 
+DIP_EXTERN void cvCopyNonZero(CvArr *src, CvArr *dst, CvArr *mask);
+
 DIP_EXTERN int cvFindContours2(IplImage* image, CvMemStorage* storage, CvSeq** first_contour, int header_size, int mode, int method, CvPoint offset);
 
 DIP_EXTERN void cvTranslateImage2(IplImage *src, IplImage *dst, int offsetx, int offsety);

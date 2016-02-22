@@ -19,6 +19,14 @@ void cvCopy2(CvArr *src, CvArr *dst, CvArr *mask) {
 	cvReleaseImage(&tmp1dR);
 }
 
+void cvCopyNonZero(CvArr *src, CvArr *dst, CvArr *mask) {
+	IplImage *tmp1d = cvCreateImage(cvGetSize(src), ((IplImage *)src)->depth, 1);
+	cvCvtColor(src, tmp1d, CV_RGB2GRAY);
+	cvCvtColor(src, src, CV_RGB2BGR);
+	cvCopy(src, dst, tmp1d);
+	cvReleaseImage(&tmp1d);
+}
+
 void cvTranslateImage2(IplImage *src, IplImage *dst, int offsetx, int offsety) {
 	CvMat* map_matrix = cvCreateMat(2, 3, CV_32FC1);
 	CV_MAT_ELEM((*map_matrix), float, 0, 0) = 1;
