@@ -104,11 +104,12 @@ void cvFillConvexPoly2(CvArr* img, CvSeq *points, CvScalar color, int line_type,
 	}
 }
 
-void cvBox2(CvArr* img, CvBox2D rect, CvScalar color, int thickness, int line_type, int shift) {   
+void cvBox2(CvArr* img, CvBox2D rect, CvScalar color, int thickness, int line_type, int shift) {
 	CvPoint2D32f boxPoints[4];
 	cvBoxPoints(rect, boxPoints);
 	if (thickness == CV_FILLED) {
-		cvFillConvexPoly(img, boxPoints, 4, color, line_type, shift);
+		CvPoint pts[4] = { cvPointFrom32f(boxPoints[0]), cvPointFrom32f(boxPoints[1]), cvPointFrom32f(boxPoints[2]), cvPointFrom32f(boxPoints[3]) };
+		cvFillConvexPoly(img, pts, 4, color, line_type, shift);
 	} else {
 		cvLine(img, cvPoint((int)boxPoints[0].x, (int)boxPoints[0].y), cvPoint((int)boxPoints[1].x, (int)boxPoints[1].y), color, thickness, line_type, shift);
 		cvLine(img, cvPoint((int)boxPoints[1].x, (int)boxPoints[1].y), cvPoint((int)boxPoints[2].x, (int)boxPoints[2].y), color, thickness, line_type, shift);
