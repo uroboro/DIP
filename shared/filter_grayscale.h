@@ -5,6 +5,8 @@
 
 #include "common.h"
 
+DIP_EXTERN int maskByDistance2Grayscale(IplImage *src, int minDistance, IplImage *dst);
+
 DIP_EXTERN int ocvDistance2Grayscale(IplImage *src, IplImage *dst);
 
 #endif /* FILTER_GRAYSCALE_H */
