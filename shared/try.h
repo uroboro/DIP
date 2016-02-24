@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-#define TRYONCE(block) { static int tryAgain ## __LINE__ = 1; if (tryAgain ## __LINE__) { tryAgain ## __LINE__ = tryCPP(block); } }
+#define TRY_ONCE(block) { static int tryAgain ## __LINE__ = 1; if (tryAgain ## __LINE__) { tryAgain ## __LINE__ = tryCPP(^{block}); } }
 
 DIP_EXTERN int tryCPP(void (^)(void));
 

@@ -8,7 +8,8 @@ int tryCPP(void (^block)(void)) {
     }
     catch (cv::Exception& e) {
         const char* err_msg = e.what();
-        UIAlert(@"OpenCV exception caught", ([NSString stringWithFormat:@"%s", err_msg]));
+        [UIPasteboard generalPasteboard].string = @(err_msg);
+        UIAlert(@"OpenCV exception caught", [@"The following error has been copied to the clipboard:\n" stringByAppendingString:@(err_msg)]);
         b = 0;
     }
     return b;
