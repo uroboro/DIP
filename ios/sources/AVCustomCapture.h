@@ -12,6 +12,8 @@
 @property (nonatomic, assign) AVCaptureVideoOrientation videoOrientation;
 @property (nonatomic, assign) AVCaptureDevicePosition devicePosition;
 
+- (void)setFPS:(int32_t)fps;
+
 - (void)start;
 - (void)stop;
 - (void)swapCamera;
