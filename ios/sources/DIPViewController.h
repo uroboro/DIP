@@ -10,10 +10,9 @@
 @property (nonatomic, retain) UIImageView *cameraView;
 
 @property (nonatomic, retain) UIImage *currentImage;
-@property (nonatomic, retain) OCVImageOperator *imageOperator;
-@property (nonatomic, retain) OCVImageOperator *imageOperator1;
+@property (nonatomic, retain) OCVImageOperator *imageOperatorImage;
+@property (nonatomic, retain) OCVImageOperator *imageOperatorVideo;
 
 @property (nonatomic, retain) NSMutableDictionary *options;
 
 @end
-

@@ -48,19 +48,20 @@ UIKIT_EXTERN NSString *rvcName(void) {
 	[_cameraView setBackgroundColor:[UIColor greenColor]];
 	[_scrollView addSubview:_cameraView];
 
-	_imageOperator = [[OCVImageOperator alloc] initWithView:_cameraView];
-	_imageOperator1 = [[OCVImageOperator alloc] initWithView:_configButton];
-	NSDictionary *options = @{
+	_imageOperatorImage = [[OCVImageOperator alloc] initWithView:_configButton];
+	_imageOperatorVideo = [[OCVImageOperator alloc] initWithView:_cameraView];
+	#if 0
+	_options = [@{
 		@"mode":(0?@"double":@"single"),
 		@"operation":@(1),
 		@"samples":@(10),
 		@"colorDepth":@(2),
 		@"kernelSize":@(5)
-	};
-	_options = [options mutableCopy];
-	_imageOperator.options = _options;
-	_imageOperator1.options = _options;
-
+	} mutableCopy];
+	#endif
+	_imageOperatorImage.options = [@{@"inputType":@"image"} mutableCopy];
+	_imageOperatorVideo.options = [@{@"inputType":@"video",@"fps":@(30)} mutableCopy];
+	[_imageOperatorVideo.camera swapCamera];
 	[self.view addSubview:_scrollView];
 }
 
@@ -98,17 +99,17 @@ UIKIT_EXTERN NSString *rvcName(void) {
 	switch (page) {
 	case 0:
 		self.title = @"Image Processing";
-		[_imageOperator stop];
+		[_imageOperatorVideo stop];
 		break;
 
 	case 1:
 		self.title = @"Processed image";
-		[_imageOperator stop];
+		[_imageOperatorVideo stop];
 		break;
 
 	case 2:
-		self.title = [@"Camera" stringByAppendingString:(_imageOperator.camera.devicePosition == AVCaptureDevicePositionBack) ? @" Back":@" Front"];
-		[_imageOperator start];
+		self.title = [@"Camera" stringByAppendingString:(_imageOperatorVideo.camera.devicePosition == AVCaptureDevicePositionBack) ? @" Back":@" Front"];
+		[_imageOperatorVideo start];
 		[UIApplication sharedApplication].idleTimerDisabled = YES;
 		UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithTitle:@"Swap" style:UIBarButtonItemStylePlain target:self action:@selector(swapButtonPressed:)];
 		self.navigationItem.rightBarButtonItem = item;
@@ -117,7 +118,7 @@ UIKIT_EXTERN NSString *rvcName(void) {
 
 	default:
 		self.title = @"Image Processing";
-		[_imageOperator stop];
+		[_imageOperatorVideo stop];
 		break;
 	}
 }
@@ -137,8 +138,8 @@ UIKIT_EXTERN NSString *rvcName(void) {
 #pragma mark - Stuff
 
 - (void)swapCamera {
-	[_imageOperator swapCamera];
-	self.title = [@"Camera" stringByAppendingString:(_imageOperator.camera.devicePosition == AVCaptureDevicePositionBack) ? @" Back":@" Front"];
+	self.title = [@"Camera" stringByAppendingString:(_imageOperatorVideo.camera.devicePosition != AVCaptureDevicePositionBack) ? @" Back":@" Front"];
+	[_imageOperatorVideo swapCamera];
 }
 
 - (void)captureImage {
@@ -146,14 +147,16 @@ UIKIT_EXTERN NSString *rvcName(void) {
 }
 
 - (void)executeConfig {
+	#if 0
 	static int operation = 4;
 	operation %= 14;
 	operation++;
 
 	_options[@"operation"] = @(operation);
 //UIAlert(@"_options", _options.description);
-	_imageOperator.options = _options;
-	_imageOperator1.options = _options;
+	_imageOperatorVideo.options = _options;
+	_imageOperatorImage.options = _options;
+	#endif
 	[self processImage];
 }
 
@@ -185,7 +188,7 @@ UIKIT_EXTERN NSString *rvcName(void) {
 
 		if (!_currentImage) { UIAlert(@"!_currentImage",nil); return; }
 
-		UIImage *image = [_imageOperator1 operateImageCreate:_currentImage];
+		UIImage *image = [_imageOperatorImage operateImageCreate:_currentImage];
 
 		if (!image) { UIAlert(@"!image",nil); return; }
 
