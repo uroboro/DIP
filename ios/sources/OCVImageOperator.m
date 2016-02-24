@@ -52,6 +52,9 @@
 	if (!imageRef) { return; }
 
 	CGImageRef imageRef2 = operateImageRefCreate(imageRef, nil, _options);
+	if (_options[@"fps"]) {
+		[self setFPS:((NSNumber *)_options[@"fps"]).intValue];
+	}
 	UIImage *image = [[UIImage alloc] initWithCGImage:imageRef2];
 	CGImageRelease(imageRef2);
 
@@ -106,6 +109,14 @@
 		[_camera stop];
 		[_camera swapCamera];
 		[_camera start];
+	});
+	dispatch_release(q);
+}
+
+- (void)setFPS:(int32_t)fps {
+	dispatch_queue_t q = dispatch_queue_create("com.uroboro.operator.fps", DISPATCH_QUEUE_CONCURRENT);
+	dispatch_async(q, ^{
+		[_camera setFPS:fps];
 	});
 	dispatch_release(q);
 }

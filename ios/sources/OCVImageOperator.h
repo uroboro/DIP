@@ -17,5 +17,6 @@
 - (void)start;
 - (void)stop;
 - (void)swapCamera;
+- (void)setFPS:(int32_t)fps;
 
 @end
