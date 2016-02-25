@@ -11,7 +11,7 @@
 @property (nonatomic, retain) UIImage *image;
 - (UIImage *)operateImageCreate:(UIImage *)image;
 
-@property (nonatomic, copy) NSMutableDictionary *options;
+@property (nonatomic, retain) NSMutableDictionary *options;
 
 @property (nonatomic, retain) AVCustomCapture *camera;
 - (void)start;
