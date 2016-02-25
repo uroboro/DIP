@@ -20,49 +20,65 @@ UIKIT_EXTERN NSString *rvcName(void) {
 
 	CGRect availableRect = UtilsAvailableScreenRect();
 
-	_scrollView = [[UIScrollView alloc] initWithFrame:availableRect];
-	[_scrollView setBackgroundColor:[UIColor blackColor]];
-	_scrollView.contentSize = CGSizeMake(3 * availableRect.size.width, availableRect.size.height);
-	_scrollView.pagingEnabled = YES;
-	_scrollView.delegate = self;
+	[self.view addSubview:_scrollView = ({
+		UIScrollView *scrollView = [[UIScrollView alloc] initWithFrame:availableRect];
+		[scrollView setBackgroundColor:[UIColor blackColor]];
+		scrollView.contentSize = CGSizeMake(3 * availableRect.size.width, availableRect.size.height);
+		scrollView.pagingEnabled = YES;
+		scrollView.delegate = self;
+		scrollView;
+	})];
 
-	_actionButton = [UIButton buttonWithType:UIButtonTypeCustom];
-	[_actionButton setFrame:availableRect];
-	[_actionButton setBackgroundColor:[UIColor darkGrayColor]];
-	[_actionButton addTarget:self action:@selector(actionButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
-	_currentImage = [self previousActionImage];
-	if (_currentImage) {
-		CGFloat k = floor(_currentImage.size.height / _currentImage.size.width * availableRect.size.width);
-		[_actionButton setBackgroundImage:_currentImage forState:UIControlStateNormal];
-		[_actionButton setFrame:CGRectMake(0, 0, availableRect.size.width, k)];
-	}
-	[_scrollView addSubview:_actionButton];
+	[_scrollView addSubview:_actionButton = ({
+		UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+		[button setFrame:availableRect];
+		[button setBackgroundColor:[UIColor darkGrayColor]];
+		[button addTarget:self action:@selector(actionButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
+		_currentImage = [self previousActionImage];
+		if (_currentImage) {
+			CGFloat k = floor(_currentImage.size.height / _currentImage.size.width * availableRect.size.width);
+			[button setBackgroundImage:_currentImage forState:UIControlStateNormal];
+			[button setFrame:CGRectMake(0, 0, availableRect.size.width, k)];
+		}
+		button;
+	})];
 
-	_configButton = [UIButton buttonWithType:UIButtonTypeCustom];
-	[_configButton setFrame:CGRectOffset(availableRect, availableRect.size.width, 0)];
-	[_configButton setBackgroundColor:[UIColor lightGrayColor]];
-	[_configButton addTarget:self action:@selector(configButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
-	[_scrollView addSubview:_configButton];
+	[_scrollView addSubview:_configButton = ({
+		UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+		[button setFrame:CGRectOffset(availableRect, availableRect.size.width, 0)];
+		[button setBackgroundColor:[UIColor lightGrayColor]];
+		[button addTarget:self action:@selector(configButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
+		button;
+	})];
 
-	_cameraView = [[UIImageView alloc] initWithFrame:CGRectOffset(availableRect, 2 * availableRect.size.width, 0)];
-	[_cameraView setBackgroundColor:[UIColor greenColor]];
-	[_scrollView addSubview:_cameraView];
+	[_scrollView addSubview:_cameraView = ({
+		UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectOffset(availableRect, 2 * availableRect.size.width, 0)];
+		[imageView setBackgroundColor:[UIColor greenColor]];
+		imageView;
+	})];
 
-	_imageOperatorImage = [[OCVImageOperator alloc] initWithView:_configButton];
-	_imageOperatorVideo = [[OCVImageOperator alloc] initWithView:_cameraView];
-	#if 0
-	_options = [@{
-		@"mode":(0?@"double":@"single"),
-		@"operation":@(1),
-		@"samples":@(10),
-		@"colorDepth":@(2),
-		@"kernelSize":@(5)
-	} mutableCopy];
-	#endif
-	_imageOperatorImage.options = [@{@"inputType":@"image"} mutableCopy];
-	_imageOperatorVideo.options = [@{@"inputType":@"video",@"fps":@(30)} mutableCopy];
-	[_imageOperatorVideo.camera swapCamera];
-	[self.view addSubview:_scrollView];
+	_imageOperatorImage = ({
+		OCVImageOperator *imageOperator = [[OCVImageOperator alloc] initWithView:_configButton];
+		imageOperator.options = [@{@"inputType":@"image",@"floatingValue":@(1)} mutableCopy];
+		imageOperator;
+	});
+
+	_imageOperatorVideo = ({
+		OCVImageOperator *imageOperator = [[OCVImageOperator alloc] initWithView:_cameraView];
+		imageOperator.options = [@{@"inputType":@"video",@"fps":@(30),@"floatingValue":@(0.25)} mutableCopy];
+		[imageOperator.camera swapCamera];
+		imageOperator;
+	});
+
+	if(01)[_scrollView addSubview:({
+		CGRect frame = CGRectMake(availableRect.size.width / 32, availableRect.size.height * 9 / 10, availableRect.size.width * 15 / 16, 20);
+		frame = CGRectOffset(frame, 2 * availableRect.size.width, 0);
+		UISlider *slider = [[UISlider alloc] initWithFrame:frame];
+		slider.value = 1;
+		[slider addTarget:self action:@selector(sliderChanged:) forControlEvents:UIControlEventValueChanged];
+		[self sliderChanged:slider];
+		slider;
+	})];
 }
 
 - (void)viewDidLoad {
@@ -133,6 +149,12 @@ UIKIT_EXTERN NSString *rvcName(void) {
 }
 - (void)swapButtonPressed:(id)sender {
 	[self swapCamera];
+}
+
+#pragma mark - Slider selectors
+
+- (void)sliderChanged:(UISlider *)sender {
+	[_imageOperatorVideo.options setObject:@(sender.value) forKey:@"floatingValue"];
 }
 
 #pragma mark - Stuff
