@@ -15,7 +15,7 @@
 #include <objc/runtime.h>
 #import <UIKit/UIAlertView.h>
 
-#define UIAlert(t, m) dispatch_async(dispatch_get_main_queue(), ^{ [[[[objc_getClass("UIAlertView") alloc] initWithTitle:(t) message:(m) delegate:0 cancelButtonTitle:@"OK" otherButtonTitles:0] autorelease] show]; })
+#define UIAlert(t, m) dispatch_async(dispatch_get_main_queue(), ^{ [[[[objc_getClass("UIAlertView") alloc] initWithTitle:[(id)(t) description] message:[(id)(m) description] delegate:0 cancelButtonTitle:@"OK" otherButtonTitles:0] autorelease] show]; })
 #endif
 
 #if defined(_WIN16) || defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(__WINDOWS__)
