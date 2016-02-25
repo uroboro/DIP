@@ -617,25 +617,20 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 	ocvPrefilterImageMask(tmp3d, tmp1d, OCV_GRAYSCALE_DISTANCE, minScalar, maxScalar);
 	)
 
-	//cvCvtColor(tmp3d, tmp3d, CV_BGR2RGB); goto end;
-
 	if (0) { // Show masked image
-		NSLog2("copy masked");
-		cvCopy2(tmp3d, tmp3d, tmp1d);
-	} else { // Show mask
-		NSLog2("copy mask");
-		cvMerge(tmp1d, tmp1d, tmp1d, NULL, tmp3d);
-	}
-
-	if (0) { // Show masked image
+		if (0) { // Show masked image
+			NSLog2("copy masked");
+			cvCopy2(tmp3d, tmp3d, tmp1d);
+		} else { // Show mask
+			NSLog2("copy mask");
+			cvMerge(tmp1d, tmp1d, tmp1d, NULL, tmp3d);
+		}
 		cvCvtColor(tmp3d, tmp3d, CV_BGR2RGB);
 	} else { // Show original
+		NSLog2("use original");
 		cvCopy(iplImage, tmp3d,  NULL);
 	}
 	//goto end;
-
-	//cvCopy(iplImage, tmp3d, NULL);
-	//cvSet(tmp3d, cvScalarAll(0), NULL);
 
 	NSLog2("get contours");
 	CvSeq *contourSeq = NULL;
