@@ -50,6 +50,7 @@
 
 - (void)getCGImage:(CGImageRef)imageRef {
 	if (!imageRef) { return; }
+NSLog(@"XXX Reached line \e[31m%d\e[0m, message: \e[33m%s\e[0m", __LINE__, "getCGImage: called");
 
 	CGImageRef imageRef2 = operateImageRefCreate(imageRef, nil, _options);
 	if (_options[@"fps"]) {
@@ -61,6 +62,7 @@
 	[self setViewImage:image];
 
 	[image release];
+NSLog(@"XXX Reached line \e[31m%d\e[0m, message: \e[31m%s\e[0m", __LINE__, "getCGImage: ended");
 }
 
 - (void)setViewImage:(UIImage *)image {
