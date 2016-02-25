@@ -72,7 +72,7 @@ DIP_EXTERN int maskByHSV(IplImage *src, CvScalar minHSV, CvScalar maxHSV, IplIma
 	cvCopy(tmp1d_mask, dst_mask, NULL);
 	cvReleaseImage(&tmp1d_mask);
 	//CVSHOW("hsv mask", 600, 0, 320, 240, dst_mask);
-	//cvSaveImage("resources/mask.png", dst_mask, NULL);
+	//cvSaveImage("Resources/mask.png", dst_mask, NULL);
 
 	return 0;
 }

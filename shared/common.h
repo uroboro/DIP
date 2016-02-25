@@ -28,9 +28,9 @@
 #endif
 
 #if __windows__
-#define RESOURCES "C:\\Users\\uroboro\\Documents\\GitHub\\DIP\\DIP\\resources\\"
+#define RESOURCES "C:\\Users\\uroboro\\Documents\\GitHub\\DIP\\DIP\\Resources\\"
 #else
-#define RESOURCES "resources/"
+#define RESOURCES "Resources/"
 #endif
 
 #endif /* COMMON_H */

@@ -38,7 +38,7 @@ int findFaces(CvArr* src, CvRect **rects, double scale, double *t) {
 	CvSize max_size = cvSize(100,100);
 	std::vector<cv::Rect> objects;
 	static cv::CascadeClassifier cascade;
-	if (cascade.empty() && !cascade.load("resources/haarcascade_frontalface_alt.xml")) {
+	if (cascade.empty() && !cascade.load("Resources/haarcascade_frontalface_alt.xml")) {
 		printf("ERROR: Could not load classifier cascade\n");
 		return -1;
 	}
