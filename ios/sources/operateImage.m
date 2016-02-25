@@ -226,6 +226,16 @@ void ocvPrefilterImageMask(CvArr *src, IplImage *dst, int grayscaleDistance, CvS
 			CvSeq *contourSeq = NULL;
 			cvFindContours(tmp1d, cvCreateMemStorage(0), &contourSeq, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_NONE, cvPoint(0, 0));
 			for (CvSeq* seq = contourSeq; seq != 0; seq = seq->h_next) {
+				// Ignore contours larger than half the screen
+				//double area = cvContourArea(seq, CV_WHOLE_SEQ, 0);
+				//if (area * 2 > tmp3d->width * tmp3d->height) continue;
+
+				// Convex hull to contour area ratio
+				//CvSeq *hull = cvConvexHull2(seq, NULL, CV_CLOCKWISE, 1);
+				//double hullarea = cvContourArea(hull, CV_WHOLE_SEQ, 0);
+				//double ratio = area / hullarea;
+				//CvScalar color_fg = CV_RGB(sin(ratio + 0) * 127 + 128, sin(ratio + 2) * 127 + 128, (ratio + 4) * 127 + 128);
+
 				// Ignore contours with a ratio of w:h or h:w greater than OCV_OBJECT_WIDTH_HEIGHT_RATIO
 				CvBox2D box = cvMinAreaRect2(seq, NULL);
 				double seqRatio = box.size.width / box.size.height;
@@ -468,12 +478,6 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, IplImage *textOverlay, ocvH
 			// Print thumb and index lines
 			CvPoint *pointT = CV_GET_SEQ_ELEM(CvPoint, fingerTipSeq, 1);
 			CvPoint *pointI = CV_GET_SEQ_ELEM(CvPoint, fingerTipSeq, 2);
-			cvLine(overlay, center, *pointT, CV_RGB(22, 220, 22), 1, 8, 0);
-			cvLine(overlay, center, *pointI, CV_RGB(220, 22, 22), 1, 8, 0);
-
-			char buf[32];
-			sprintf(buf, "%d", segmentIndex);
-			drawBadge(textOverlay, buf, CV_RGB(200, 200, 200), 1, center, CV_RGB(20, 20, 20));
 
 			double angle = cvPointAngle(cvPointSubtract(*pointT, center), cvPointSubtract(*pointI, center));
 			double phase = cvPointPhase(cvPointSubtract(*pointT, center));
@@ -482,7 +486,12 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, IplImage *textOverlay, ocvH
 			myHand->angle = phase + ((myHand->orientation) ? 1 : -1) * angle;
 			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+			cvLine(overlay, center, *pointT, CV_RGB(22, 220, 22), 1, 8, 0);
+			cvLine(overlay, center, *pointI, CV_RGB(220, 22, 22), 1, 8, 0);
 			cvEllipse(overlay, center, cvSize(50, 50), 0, 180 / M_PI * (phase), 180 / M_PI * (myHand->angle), CV_RGB(200, 200, 200), 2, 8, 0);
+			char buf[32];
+			sprintf(buf, "%d", segmentIndex);
+			drawBadge(textOverlay, buf, CV_RGB(200, 200, 200), 1, center, CV_RGB(20, 20, 20));
 			//cvCircle(overlay, cvPoint(0, 0), 100, CV_RGB(100, 20, 200), 2, 8, 0);
 		}
 
@@ -606,325 +615,23 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 	CvSeq *contourSeq = NULL;
 	cvFindContours(tmp1d, cvCreateMemStorage(0), &contourSeq, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_NONE, cvPoint(0, 0));
 	// Iterate over each contour
-	//TRY_ONCE(
 	NSLog2("foreach contour");
 	for (CvSeq* seq = contourSeq; seq != 0; seq = seq->h_next) {
-		// Ignore contours larger than half the screen
-		//double area = cvContourArea(seq, CV_WHOLE_SEQ, 0);
-		//if (area * 2 > tmp3d->width * tmp3d->height) continue;
-
-		// Convex hull to contour area ratio
-		//CvSeq *hull = cvConvexHull2(seq, NULL, CV_CLOCKWISE, 1);
-		//double hullarea = cvContourArea(hull, CV_WHOLE_SEQ, 0);
-		//double ratio = area / hullarea;
-		//CvScalar color_fg = CV_RGB(sin(ratio + 0) * 127 + 128, sin(ratio + 2) * 127 + 128, (ratio + 4) * 127 + 128);
-
 		IplImage *overlay = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 3);
 		IplImage *textOverlay = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 3);
 
-		// Extra canvas to do single contour drawing
-		IplImage *canvas = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 1);
-		cvDrawContours(canvas, seq, cvScalarAll(255), cvScalarAll(255), 0, CV_FILLED, 8, cvPoint(0, 0));
-		//cvMerge(canvas, canvas, canvas, NULL, tmp3d); goto endLoop;
-
-		// Defects
-		// Assumed to be fingers (or wrist)
-		NSLog2("get defects");
-		CvSeq *defects = cvConvexityDefects(seq, cvConvexHull2(seq, NULL, CV_CLOCKWISE, 0), cvCreateMemStorage(0));
-		if(01){ // Filter out the shallow ones
-			NSLog2("deep defects");
-			CvSeq* defectsSeq = cvCreateSeq(CV_SEQ_ELTYPE_PTR, sizeof(CvSeq), sizeof(CvConvexityDefect), cvCreateMemStorage(0));
-			//cvDrawContours(overlay, defects, CV_RGB(0, 255, 0), cvScalarAll(0), 0, 1, 8, cvPoint(0, 0));
-			for (int i = 0; i < defects->total; i++) {
-				CvConvexityDefect *defect = CV_GET_SEQ_ELEM(CvConvexityDefect, defects, i);
-				if (defect->depth > OCV_DEFECT_MIN_DEPTH) {
-					cvSeqPush(defectsSeq, defect);
-				}
-			}
-			cvReleaseMemStorage(&defects->storage);
-			defects = defectsSeq;
-			//cvClearMemStorage(defectsSeq->storage);
-			//cvReleaseMemStorage(&defectsSeq->storage);
-		}
-
-		CvSeq* fingerTipSeq = cvCreateSeq(CV_SEQ_ELTYPE_POINT, sizeof(CvSeq), sizeof(CvPoint), cvCreateMemStorage(0));
-		CvSeq* pointSeq = cvCreateSeq(CV_SEQ_ELTYPE_POINT, sizeof(CvSeq), sizeof(CvPoint), cvCreateMemStorage(0));
-
-		NSLog2("get data");
-		for (int i = 0; i < defects->total; i++) {
-			CvConvexityDefect *defect = CV_GET_SEQ_ELEM(CvConvexityDefect, defects, i);
-			cvSeqPush(pointSeq, defect->depth_point);
-
-			CvConvexityDefect *prevDefect = CV_GET_SEQ_ELEM(CvConvexityDefect, defects, i - 1);
-			CvPoint fingerTip = cvPointMidPoint(*defect->start, *prevDefect->end);
-			//cvCircle(textOverlay, *defect->start, 2, CV_RGB(220, 20, 20), 2, 8, 0);
-			//cvCircle(textOverlay, *prevDefect->end, 2, CV_RGB(20, 220, 20), 2, 8, 0);
-			cvSeqPush(fingerTipSeq, &fingerTip);
-		}
-		//cvClearMemStorage(defects->storage);
-		cvReleaseMemStorage(&defects->storage);
-		//goto cleanUp;
-
-		// Only convex contours are valid
-		// Work with 3 to 6 deep defects
-		if (cvCheckContourConvexity(pointSeq) && (pointSeq->total >= 3 && pointSeq->total <= 6)) {
-			NSLog2("convex and 3-6 fingers");
-
-			// Get circle enclosing defects
-			// Not an excellent approximation of the palm, but close enough
-			float radius = 0.0;
-			CvPoint2D32f centerf;
-			cvMinEnclosingCircle(pointSeq, &centerf, &radius);
-			CvPoint center = cvPointFrom32f(centerf);
-			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			myHand.center = center;
-			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-			{ // Place radius between shortest fingertip and longest deep defect
-				NSLog2("radius setting");
-				//find longest near radius
-				float lnRadius = 0;
-				for (int i = 0; i < pointSeq->total; i++) {
-					CvPoint *point = CV_GET_SEQ_ELEM(CvPoint, pointSeq, i);
-					int distance = cvPointDistance(center, *point);
-					if (distance > lnRadius) {
-						lnRadius = distance;
-					}
-				}
-				lnRadius += 2;
-
-				//find shortest far radius
-				float sfRadius = 1000;
-				for (int i = 0; i < fingerTipSeq->total; i++) {
-					CvPoint *point = CV_GET_SEQ_ELEM(CvPoint, fingerTipSeq, i);
-					int distance = cvPointDistance(center, *point);
-					if (distance < sfRadius) {
-						sfRadius = distance;
-					}
-				}
-				sfRadius -= 2;
-				radius = (lnRadius + sfRadius) / 2;
-				//cvCircle(overlay, center, lnRadius, CV_RGB(20, 220, 20), 2, 8, 0);
-				//cvCircle(overlay, center, sfRadius, CV_RGB(20, 220, 20), 2, 8, 0);
-
-				//cvCircle(overlay, center, radius, CV_RGB(20, 220, 20), 2, 8, 0);
-			}
-			//cvFillConvexPoly2(overlay, pointSeq, CV_RGB(30, 180, 20), 8, 0);
-
-			// Find fingers
-			CvSeq *circleContours = NULL;
-			{ // Get contour of circle starting on black pixel
-				NSLog2("circle");
-				{ // Get circle points
-					IplImage *tmp1d = cvCreateImage(cvGetSize(canvas), canvas->depth, 1);
-					cvCircle(tmp1d, center, radius, cvScalarAll(255), CV_FILLED, 8, 0);
-					cvFindContours(tmp1d, cvCreateMemStorage(0), &circleContours, sizeof(CvContour), CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE, cvPoint(0, 0));
-					cvReleaseImage(&tmp1d);
-				}
-
-				NSLog2("circle rotate");
-				// Rotate sequence so that the first item contains a black pixel
-				int safeCount = circleContours->total;
-				CvPoint *point = CV_GET_SEQ_ELEM(CvPoint, circleContours, circleContours->total - 1);
-				while (cvGet2D(canvas, point->y, point->x).val[0] != 0 && safeCount--) {
-					cvSeqPushFront(circleContours, point);
-					cvSeqPop(circleContours, NULL);
-					point = CV_GET_SEQ_ELEM(CvPoint, circleContours, circleContours->total - 1);
-				}
-			}
-
-			NSLog2("segments");
-			typedef struct ocvLine {
-				CvPoint start;
-				CvPoint end;
-			} ocvLine;
-			CvSeq* segmentsSeq = cvCreateSeq(CV_SEQ_ELTYPE_PTR , sizeof(CvSeq), sizeof(ocvLine), cvCreateMemStorage(0));
-
-			// Find longest line segment
-			ocvLine line;
-			CvPoint *lastPoint = CV_GET_SEQ_ELEM(CvPoint, circleContours, circleContours->total - 1);
-			char previousValue = (char)cvGet2D(canvas, lastPoint->y, lastPoint->x).val[0] != 0;
-			int segmentIndex = 0;
-			int counter = 0;
-			int maxCounter = -1;
-			int maxCounterIndex = -1;
-			for (int i = 0; i < circleContours->total; i++) {
-				CvPoint *point = CV_GET_SEQ_ELEM(CvPoint, circleContours, i);
-				char value = (char)cvGet2D(canvas, point->y, point->x).val[0] != 0;
-
-				// Increase length on white pixels
-				if (value) {
-					counter++;
-				}
-
-				// Start counting on up-edge
-				if (value != 0 && value != previousValue) {
-					counter = 0;
-					line.start = *point;
-				}
-
-				// Stop counting on down-edge and push line to sequence
-				if (value == 0 && value != previousValue) {
-					if (counter > maxCounter) {
-						maxCounter = counter;
-						maxCounterIndex = segmentIndex;
-					}
-					segmentIndex++;
-					line.end = *point;
-					cvSeqPush(segmentsSeq, &line);
-				}
-
-				previousValue = value;
-			}
-			//cvClearMemStorage(circleContours->storage);
-			cvReleaseMemStorage(&circleContours->storage);
-
-			// Rotate line segments so longest is at first index
-			while (maxCounterIndex--) {
-				ocvLine *line = CV_GET_SEQ_ELEM(ocvLine, segmentsSeq, 0);
-				cvSeqPush(segmentsSeq, line);
-				cvSeqPopFront(segmentsSeq, NULL);
-			}
-
-			{ // Align fingerTipSeq to segmentsSeq
-				NSLog2("align tip and segment");
-				/*
-				get wrist point
-				foreach fingerTip
-					save closest length and associated index
-				shift fingertips index times
-				*/
-				ocvLine* line = CV_GET_SEQ_ELEM(ocvLine, segmentsSeq, 0);
-				CvPoint wristPoint = cvPointMidPoint(line->start, line->end);
-				CvPoint *firstPoint = CV_GET_SEQ_ELEM(CvPoint, fingerTipSeq, 0);
-				int minDistance = cvPointDistance(wristPoint, *firstPoint);
-				int minDistanceIndex = 0;
-				for (int i = 0; i < fingerTipSeq->total; i++) {
-					CvPoint *point = CV_GET_SEQ_ELEM(CvPoint, fingerTipSeq, i);
-					int distance = cvPointDistance(wristPoint, *point);
-					if (distance < minDistance) {
-						minDistance = distance;
-						minDistanceIndex = i;
-					}
-				}
-
-				// Rotate line segments so longest is at first index
-				while (minDistanceIndex--) {
-					CvPoint *point = CV_GET_SEQ_ELEM(CvPoint, fingerTipSeq, 0);
-					cvSeqPush(fingerTipSeq, point);
-					cvSeqPopFront(fingerTipSeq, NULL);
-				}
-			}
-
-			{ // find thumb
-				NSLog2("find thumb");
-				ocvLine *lineN = CV_GET_SEQ_ELEM(ocvLine, segmentsSeq, 1);
-				ocvLine *lineP = CV_GET_SEQ_ELEM(ocvLine, segmentsSeq, -1);
-
-				int distN = cvPointDistance(lineN->start, lineN->end);
-				int distP = cvPointDistance(lineP->start, lineP->end);
-
-				/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-				myHand.orientation = 0;
-				/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-				if (distP > distN) {
-					/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-					myHand.orientation = 1;
-					/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-					//cvLine(overlay, line->start, lineP->end, CV_RGB(22, 220, 22), 1, 8, 0);
-					// Revert segmentsSeq
-					ocvLine *line = CV_GET_SEQ_ELEM(ocvLine, segmentsSeq, 0);
-					cvSeqPush(segmentsSeq, line);
-					cvSeqPopFront(segmentsSeq, NULL);
-					cvSeqInvert(segmentsSeq);
-					// Revert fingerTipSeq
-					CvPoint *point = CV_GET_SEQ_ELEM(CvPoint, fingerTipSeq, 0);
-					cvSeqPush(fingerTipSeq, point);
-					cvSeqPopFront(fingerTipSeq, NULL);
-					cvSeqInvert(fingerTipSeq);
-				}
-			}
-
-			if (01) { // Print finger + wrist count
-				// Print thumb and index lines
-				CvPoint *pointT = CV_GET_SEQ_ELEM(CvPoint, fingerTipSeq, 1);
-				CvPoint *pointI = CV_GET_SEQ_ELEM(CvPoint, fingerTipSeq, 2);
-				cvLine(overlay, center, *pointT, CV_RGB(22, 220, 22), 1, 8, 0);
-				cvLine(overlay, center, *pointI, CV_RGB(220, 22, 22), 1, 8, 0);
-
-				char buf[32];
-				sprintf(buf, "%d", segmentIndex);
-				drawBadge(textOverlay, buf, CV_RGB(200, 200, 200), 1, center, CV_RGB(20, 20, 20));
-
-				double angle = cvPointAngle(cvPointSubtract(*pointT, center), cvPointSubtract(*pointI, center));
-				double phase = cvPointPhase(cvPointSubtract(*pointT, center));
-				/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-				myHand.controlAngle = angle;
-				myHand.angle = phase + ((myHand.orientation) ? 1 : -1) * angle;
-				/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-				#if 0
-					sprintf(buf, "%.1f", 180 / M_PI * angle);
-					drawBadge(textOverlay, buf, CV_RGB(200, 200, 200), .5, cvPoint(textOverlay->width - 50, 50), cvScalar(200, 15, 127, 0));
-					sprintf(buf, "%.1f", 180 / M_PI * phase);
-					drawBadge(textOverlay, buf, CV_RGB(200, 200, 200), .5, cvPoint(50, 50), cvScalar(200, 15, 255, 0));
-					sprintf(buf, "%.1f", 180 / M_PI * (phase + ((myHand.orientation) ? 1 : -1) * angle));
-					drawBadge(textOverlay, buf, CV_RGB(200, 200, 200), .5, cvPoint(textOverlay->width/2, 50), cvScalar(200, 15, 255, 0));
-				#endif
-
-				cvEllipse(overlay, center, cvSize(50, 50), 0, 180 / M_PI * (phase), 180 / M_PI * (phase + ((myHand.orientation) ? 1 : -1) * angle), CV_RGB(200, 200, 200), 2, 8, 0);
-				//cvCircle(overlay, cvPoint(0, 0), 100, CV_RGB(100, 20, 200), 2, 8, 0);
-			}
-
-			// Print finger segments
-			#if 0
-			NSLog2("print finger segments");
-				for (int i = 0; i < segmentsSeq->total; i++) {
-					ocvLine *line = CV_GET_SEQ_ELEM(ocvLine, segmentsSeq, i);
-					//cvLine(overlay, line->start, line->end, CV_RGB(22, 22, 22), 1, 8, 0);
-					char buf[32];
-					sprintf(buf, "%d", i);
-					CvPoint lineCenter = cvPoint((line->end.x + line->start.x) / 2, (line->end.y + line->start.y) / 2);
-					unsigned char angle = 127 + 127 * atan2(lineCenter.y - center.y, lineCenter.x - center.x) / M_PI;
-					drawBadge(textOverlay, buf, CV_RGB(200, 200, 200), .5, lineCenter, cvScalarRGBFromHSV(cvScalar(angle, 255, 127, 0)));
-				}
-			#endif
-			//cvClearMemStorage(segmentsSeq->storage);
-			cvReleaseMemStorage(&segmentsSeq->storage);
-
-			// Print finger tips
-			#if 0
-			NSLog2("print finger tips");
-				for (int i = 0; i < fingerTipSeq->total; i++) {
-					CvPoint *point = CV_GET_SEQ_ELEM(CvPoint, fingerTipSeq, i);
-					//cvCircle(textOverlay, *point, 10, CV_RGB(20, 20, 20), 2, 8, 0);
-					char buf[32];
-					sprintf(buf, "%d", i);
-					drawBadge(textOverlay, buf, CV_RGB(200, 200, 200), .5, *point, CV_RGB(20, 20, 20));
-				}
-			#endif
-		}
-
-		goto cleanUp;
-		cleanUp:;
-		NSLog2("cleanUp");
-		// Clean up
-
-		//cvClearMemStorage(fingerTipSeq->storage);
-		cvReleaseMemStorage(&fingerTipSeq->storage);
-		//cvClearMemStorage(pointSeq->storage);
-		cvReleaseMemStorage(&pointSeq->storage);
-
-		cvReleaseImage(&canvas);
+		//TRY_ONCE(
+		int ret = ocvAnalizeContour(seq, overlay, textOverlay, &myHand);
+		//)
 
 		// Copy overlay and text to output image
-		cvCopyNonZero(overlay, tmp3d, NULL);
-		cvReleaseImage(&overlay);
-		cvCopyNonZero(textOverlay, tmp3d, NULL);
-		cvReleaseImage(&textOverlay);
+		if (ret) {
+			cvCopyNonZero(overlay, tmp3d, NULL);
+			cvReleaseImage(&overlay);
+			cvCopyNonZero(textOverlay, tmp3d, NULL);
+			cvReleaseImage(&textOverlay);
+		}
 	}
-	//)
 
 	//cvClearMemStorage(contourSeq->storage);
 	cvReleaseMemStorage(&contourSeq->storage);
