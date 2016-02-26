@@ -569,6 +569,10 @@ void ocvCreateHandIconWithHand(IplImage *layer, ocvHand myHand) {
 
 	CvSize spriteSize = cvGetSize(iplImage);
 
+	if (myHand.orientation) {
+		cvFlip(iplImage, NULL, 1);
+	}
+
 	{
 		IplImage *tmp1d = cvCreateImage(cvGetSize(iplImage), iplImage->depth, 1);
 		cvCvtColor(iplImage, tmp1d, CV_BGR2GRAY);
