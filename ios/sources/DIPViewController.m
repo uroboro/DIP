@@ -4,7 +4,7 @@
 
 #import "common.h"
 #import "utils.h"
-#import "scaleAndRotate.h"
+#import "UIImage_scaleAndRotate.h"
 
 #import "DIPViewController.h"
 
