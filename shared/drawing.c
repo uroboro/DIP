@@ -1,4 +1,67 @@
 #include "drawing.h"
+
+
+static void hsvtorgb(unsigned char *r, unsigned char *g, unsigned char *b, unsigned char h, unsigned char s, unsigned char v) {
+	unsigned char region, fpart, p, q, t;
+
+	if (s == 0) {
+		/* color is grayscale */
+		*r = *g = *b = v;
+		return;
+	}
+
+	/* make hue 0-5 */
+	region = h / 43;
+	/* find remainder part, make it from 0-255 */
+	fpart = (h - (region * 43)) * 6;
+
+	/* calculate temp vars, doing integer multiplication */
+	p = (v * (255 - s)) >> 8;
+	q = (v * (255 - ((s * fpart) >> 8))) >> 8;
+	t = (v * (255 - ((s * (255 - fpart)) >> 8))) >> 8;
+
+	/* assign temp vars based on color cone region */
+	switch(region) {
+		case 0:
+			*r = v; *g = t; *b = p; break;
+		case 1:
+			*r = q; *g = v; *b = p; break;
+		case 2:
+			*r = p; *g = v; *b = t; break;
+		case 3:
+			*r = p; *g = q; *b = v; break;
+		case 4:
+			*r = t; *g = p; *b = v; break;
+		default:
+			*r = v; *g = p; *b = q; break;
+	}
+
+	return;
+}
+
+CvScalar cvScalarRGBFromHSV(CvScalar hsv) {
+	unsigned char R, G, B;
+	hsvtorgb(&R, &G, &B, (unsigned char)hsv.val[0], (unsigned char)hsv.val[1], (unsigned char)hsv.val[2]);
+	return CV_RGB(R, G, B);
+}
+
+void drawBadge(CvArr *img, char *string, CvScalar fontColor, double fontSize, CvPoint badgeCenter, CvScalar badgeColor) {
+	CvFont font;
+	cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, fontSize, fontSize, 0, 2, 8);
+
+	CvSize textSize;
+	cvGetTextSize(string, &font, &textSize, NULL);
+
+	CvPoint textPoint = cvPoint(badgeCenter.x - textSize.width / 2, badgeCenter.y + textSize.height / 2);
+	double textWidthOrHeightMax = (textSize.height > textSize.width) ? textSize.height : textSize.width;
+
+	cvCircle(img, badgeCenter, 2 + textWidthOrHeightMax, CV_RGB(255, 255, 255), CV_FILLED, 8, 0);
+	cvCircle(img, badgeCenter, textWidthOrHeightMax, badgeColor, CV_FILLED, 8, 0);
+
+	cvPutText(img, string, textPoint, &font, fontColor);
+}
+
+
 #include <stdio.h>
 
 char pointIsInRect(CvPoint point, CvSize size) {

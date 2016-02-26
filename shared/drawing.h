@@ -4,6 +4,11 @@
 #include <opencv2/core/core_c.h>
 
 #include "common.h"
+
+DIP_EXTERN CvScalar cvScalarRGBFromHSV(CvScalar hsv);
+
+DIP_EXTERN void drawBadge(CvArr *img, char *string, CvScalar fontColor, double fontSize, CvPoint badgeCenter, CvScalar badgeColor);
+
 #include "click.h"
 
 DIP_EXTERN char PointInRect(CvPoint point, CvSize size);
