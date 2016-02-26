@@ -16,7 +16,7 @@
 
 #include "common.h"
 #include "click.h"
-#include "geometry.h"
+#include "drawing.h"
 #include "histogram.h"
 #include "filter_hsv.h"
 #include "face_detection.h"

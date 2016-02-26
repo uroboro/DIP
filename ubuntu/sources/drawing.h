@@ -1,5 +1,5 @@
-#ifndef GEOMETRY_H
-#define GEOMETRY_H
+#ifndef DRAWING_H
+#define DRAWING_H
 
 #include <opencv2/core/core_c.h>
 
@@ -38,4 +38,4 @@ DIP_EXTERN int printSquare(Square square);
 
 DIP_EXTERN void drawSquare(CvArr *img, Square square);
 
-#endif /* GEOMETRY_H */
+#endif /* DRAWING_H */
