@@ -1,14 +1,13 @@
 #include "filter_grayscale.h"
 #include <opencv2/imgproc/imgproc_c.h>
 
-DIP_EXTERN int maskByDistance2Grayscale(IplImage *src, int minDistance, IplImage *dst) {
+int maskByDistance2Grayscale(IplImage *src, IplImage *dst, int minDistance) {
 	IplImage *tmp3d = cvCreateImage(cvGetSize(src), src->depth, 3);
 	ocvDistance2Grayscale(src, tmp3d);
 	cvThreshold(tmp3d, tmp3d, minDistance, 255, CV_THRESH_BINARY);
 	cvCvtColor(tmp3d, dst, CV_BGR2GRAY);
 	cvReleaseImage(&tmp3d);
 }
-
 
 int ocvDistance2Grayscale(IplImage *src, IplImage *dst) {
 	if (!src || !dst) { /*present(1, "!image"); */return 1; }
