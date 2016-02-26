@@ -645,26 +645,30 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 	CvSeq *contourSeq = NULL;
 	cvFindContours(tmp1d, cvCreateMemStorage(0), &contourSeq, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_NONE, cvPoint(0, 0));
 	// Iterate over each contour
-	NSLog2("foreach contour");
-	for (CvSeq* seq = contourSeq; seq != 0; seq = seq->h_next) {
-		IplImage *overlay = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 3);
+	int contourCount = 0; for (CvSeq* seq = contourSeq; seq != 0; seq = seq->h_next) contourCount++;
+	NSLog2(([NSString stringWithFormat:@"foreach contour (%d)", contourCount]).UTF8String);
+	if (contourCount > 0) {
+		for (CvSeq* seq = contourSeq; seq != 0; seq = seq->h_next) {
+			IplImage *overlay = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 3);
 
-		ocvHand myHand;
+			__block ocvHand myHand;
 
-		//TRY_ONCE(
-		int ret = ocvAnalizeContour(seq, overlay, &myHand);
-		//)
+			NSLog2("analize contour");
+			__block int ret = 0;
+			TRY_ONCE(
+			ret = ocvAnalizeContour(seq, overlay, &myHand);
+			)
 
-		// Copy overlay and text to output image
-		if (ret) {
-			if (myHand.fingers > 2 && myHand.fingers < 6) ocvDrawHandInfo(overlay, myHand);
-			cvCopyNonZero(overlay, tmp3d, NULL);
+			// Copy overlay and text to output image
+			if (ret && (myHand.fingers > 2 && myHand.fingers < 6)) {
+				NSLog2("draw hand");
+				ocvDrawHandInfo(overlay, myHand);
+				cvCopyNonZero(overlay, tmp3d, NULL);
+			}
 			cvReleaseImage(&overlay);
 		}
+		cvReleaseMemStorage(&contourSeq->storage);
 	}
-
-	cvReleaseMemStorage(&contourSeq->storage);
-
 	goto end;
 	end:;
 	NSLog2("end proc");
