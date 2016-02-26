@@ -184,7 +184,7 @@ void ocvPrefilterImageMask(CvArr *src, IplImage *dst, int grayscaleDistance, CvS
 
 	{ // Filter out non skin tones
 		NSLog2("skin");
-		maskByHSV(src, minScalar, maxScalar, tmp1dc);
+		maskByHSV(src, tmp1dc, minScalar, maxScalar);
 	}
 
 	{
