@@ -134,35 +134,10 @@ CGImageRef CreateScaledCGImageFromCGImage(CGImageRef image, float scale) {
 
 #define DO_ONCE(block) { static dispatch_once_t once ## __LINE__; dispatch_once(&once ## __LINE__, ^{block}); }
 
-
-#define cvPointPolar(r, f)		cvPointFrom32f(cvPoint2D32f((r) * cos((f)), (r) * sin((f))))
-
-#define cvPointScale(p, s)		cvPoint((s) * (p).x, (s) * (p).y)
-#define cvPointModule(p)		sqrt(cvPointDot(p, p))
-#define cvPointPhase(p) 		atan2((p).y, (p).x)
-
-// p + q
-#define cvPointAdd(p, q)		cvPoint((p).x + (q).x, (p).y + (q).y)
-// p . q
-#define cvPointDot(p, q)		((p).x * (q).x + (p).y * (q).y)
-// p - q
-#define cvPointSubtract(p, q)	cvPointAdd(p, cvPointScale(q, -1))
-
-#define cvPointDistance(p, q)	cvPointModule(cvPointSubtract(p, q))
-// (p + q) / 2
-#define cvPointMidPoint(p, q)	cvPointScale(cvPointAdd(p, q), 0.5)
-#define cvPointAngle(p, q)		acos(cvPointDot(p, q) / (cvPointModule(p) * cvPointModule(q)))
-#define cvPointProject(p, q)	(cvPointDot(p, q) / cvPointModule(q)))
-
-#define cvPointFromSize(p)		cvPoint((p).width, (p).height)
-
-#define cvSizeScale(p, s)		cvSize((s) * (p).width, (s) * (p).height)
-
 #define OCV_GRAYSCALE_DISTANCE 20
 #define OCV_DEFECT_MIN_DEPTH 10
 #define OCV_OBJECT_WIDTH_HEIGHT_RATIO 2
 #define OCV_ACCUMULATOR_ALPHA 0.3
-
 
 typedef struct ocvHand {
 	int fingers;
