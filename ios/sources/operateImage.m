@@ -17,6 +17,7 @@
 #include "filter_grayscale.h"
 
 #include "try.h"
+#import "utils.h"
 
 static void hsvtorgb(unsigned char *r, unsigned char *g, unsigned char *b, unsigned char h, unsigned char s, unsigned char v) {
 	unsigned char region, fpart, p, q, t;
@@ -545,6 +546,52 @@ void ocvDrawHandInfo(IplImage *overlay, ocvHand myHand) {
 	drawBadge(overlay, buf, CV_RGB(200, 200, 200), 1, myHand.center, CV_RGB(20, 20, 20));
 }
 
+void ocvResizeFrame(IplImage *src, IplImage *dst) {
+		cvSetImageROI(dst, cvRect(0, 0, src->width, src->height));
+		cvResize(src, dst, CV_INTER_LINEAR);
+		cvResetImageROI(dst);
+}
+
+void ocv2DAffineMatrix(CvMat* map_matrix, CvPoint2D32f c, float a) {
+	CV_MAT_ELEM((*map_matrix), float, 0, 0) = cos(a);
+	CV_MAT_ELEM((*map_matrix), float, 0, 1) = -sin(a);
+	CV_MAT_ELEM((*map_matrix), float, 0, 2) = c.x - c.x * cos(a) + c.y * sin(a);
+	CV_MAT_ELEM((*map_matrix), float, 1, 0) = sin(a);
+	CV_MAT_ELEM((*map_matrix), float, 1, 1) = cos(a);
+	CV_MAT_ELEM((*map_matrix), float, 1, 2) = c.y - c.x * sin(a) - c.y * cos(a);
+}
+
+void ocvCreateHandIconWithHand(IplImage *layer, ocvHand myHand) {
+	char *handPaths[] = { "1456448219_icon_2_rock_n_roll.png", "1456448230_icon_3_high_five.png" };
+	UIImage *uiImage = [[UIImage alloc] initWithContentsOfFile:UtilsResourcePathWithName(@(handPaths[(myHand.fingers == 5)]))];
+	IplImage *iplImage = IplImageFromCGImage(uiImage.CGImage);
+	[uiImage release];
+
+	CvSize spriteSize = cvGetSize(iplImage);
+
+	{
+		IplImage *tmp1d = cvCreateImage(cvGetSize(iplImage), iplImage->depth, 1);
+		cvCvtColor(iplImage, tmp1d, CV_BGR2GRAY);
+		cvNot(tmp1d, tmp1d);
+		cvMerge(tmp1d, tmp1d, tmp1d, NULL, iplImage);
+		cvThreshold(tmp1d, tmp1d, 2, 255, CV_THRESH_BINARY);
+		cvReleaseImage(&tmp1d);
+	}
+	IplImage *tmp3d = cvCreateImage(cvGetSize(layer), layer->depth, layer->nChannels);
+	ocvResizeFrame(iplImage, tmp3d);
+	cvReleaseImage(&iplImage);
+
+	cvTranslateImage2(tmp3d, tmp3d, myHand.center.x - spriteSize.width / 2, myHand.center.y - spriteSize.height / 2);
+
+	float phaseI = M_PI / 2 + cvPointPhase(cvPointSubtract(myHand.indexTip, myHand.center));
+	CvMat* map_matrix = cvCreateMat(2, 3, CV_32FC1);
+	ocv2DAffineMatrix(map_matrix, cvPointTo32f(myHand.center), phaseI);
+	cvWarpAffine(tmp3d, tmp3d, map_matrix, CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS, cvScalarAll(0));
+
+	cvCopy(tmp3d, layer, NULL);
+	cvReleaseImage(&tmp3d);
+}
+
 CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSMutableDictionary *options) {
 	if (!imageRef0) { present(1, "!imageRef0"); return nil; }
 	NSLog2("operating");
@@ -630,7 +677,7 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 		NSLog2("use original");
 		cvCopy(iplImage, tmp3d,  NULL);
 	}
-	{
+	{ // Add red alpha layer to show ignored areas
 		IplImage *red1d = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 1);
 		IplImage *red3d = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 3);
 		cvNot(tmp1d, red1d);
@@ -643,7 +690,7 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 
 	NSLog2("get contours");
 	CvSeq *contourSeq = NULL;
-	cvFindContours(tmp1d, cvCreateMemStorage(0), &contourSeq, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_NONE, cvPoint(0, 0));
+	cvFindContours2(tmp1d, cvCreateMemStorage(0), &contourSeq, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_NONE, cvPoint(0, 0));
 	// Iterate over each contour
 	int contourCount = 0; for (CvSeq* seq = contourSeq; seq != 0; seq = seq->h_next) contourCount++;
 	NSLog2(([NSString stringWithFormat:@"foreach contour (%d)", contourCount]).UTF8String);
@@ -662,25 +709,35 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 			// Copy overlay and text to output image
 			if (ret && (myHand.fingers > 2 && myHand.fingers < 6)) {
 				NSLog2("draw hand");
-				ocvDrawHandInfo(overlay, myHand);
+				//ocvDrawHandInfo(overlay, myHand);
+				ocvCreateHandIconWithHand(overlay, myHand);
 				cvCopyNonZero(overlay, tmp3d, NULL);
+			} else if (0) {
+				IplImage *red1d = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 1);
+				IplImage *red3d = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 3);
+				cvDrawContours(red1d, seq, cvScalarAll(255), cvScalarAll(255), 0, CV_FILLED, 8, cvPoint(0, 0));
+				cvMerge(red1d, NULL, NULL, NULL, red3d);
+				cvAddWeighted(tmp3d, 0.7, red3d, 0.3, 0, tmp3d);
+				cvReleaseImage(&red1d);
+				cvReleaseImage(&red3d);
 			}
 			cvReleaseImage(&overlay);
 		}
 		cvReleaseMemStorage(&contourSeq->storage);
 	}
+
 	goto end;
 	end:;
 	NSLog2("end proc");
 	cvReleaseImage(&tmp1d);
 	cvReleaseImage(&iplImage);
 
-	{
+	{ // On-screen debug data
 		_time = ((double)getTickCount() - _time) / getTickFrequency();
 		CvFont font; double fontSize = 1;
 		cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, fontSize, fontSize, 0, 2, 8);
 		{
-			char buf[32]; sprintf(buf, "fps: %.f?", 1/_time);
+			char buf[32]; sprintf(buf, "time: %dms (%.1f fps)?", (int)(1000 * _time), 1/_time);
 			cvPutText(tmp3d, buf, cvPoint(10, tmp3d->height - 40), &font, CV_RGB(0, 255, 0));
 		}
 		{
