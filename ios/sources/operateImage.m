@@ -16,6 +16,8 @@
 #include "filter_hsv.h"
 #include "filter_grayscale.h"
 
+#include "ocv_hand.h"
+
 #include "try.h"
 #import "utils.h"
 
@@ -138,15 +140,6 @@ CGImageRef CreateScaledCGImageFromCGImage(CGImageRef image, float scale) {
 #define OCV_DEFECT_MIN_DEPTH 10
 #define OCV_OBJECT_WIDTH_HEIGHT_RATIO 2
 #define OCV_ACCUMULATOR_ALPHA 0.3
-
-typedef struct ocvHand {
-	int fingers;
-	int orientation; // 1 left, 0 right
-	float controlAngle; // index-to-thumb angle
-	CvPoint center;
-	CvPoint thumbTip;
-	CvPoint indexTip;
-} ocvHand;
 
 void ocvPrefilterImageMask(CvArr *src, IplImage *dst, int grayscaleDistance, CvScalar minScalar, CvScalar maxScalar) {
 	IplImage *tmp1dg = cvCreateImage(cvGetSize(dst), dst->depth, 1);
@@ -521,56 +514,6 @@ void ocvDrawHandInfo(IplImage *overlay, ocvHand myHand) {
 	drawBadge(overlay, buf, CV_RGB(200, 200, 200), 1, myHand.center, CV_RGB(20, 20, 20));
 }
 
-void ocvResizeFrame(IplImage *src, IplImage *dst) {
-		cvSetImageROI(dst, cvRect(0, 0, src->width, src->height));
-		cvResize(src, dst, CV_INTER_LINEAR);
-		cvResetImageROI(dst);
-}
-
-void ocv2DAffineMatrix(CvMat* map_matrix, CvPoint2D32f c, float a) {
-	CV_MAT_ELEM((*map_matrix), float, 0, 0) = cos(a);
-	CV_MAT_ELEM((*map_matrix), float, 0, 1) = -sin(a);
-	CV_MAT_ELEM((*map_matrix), float, 0, 2) = c.x - c.x * cos(a) + c.y * sin(a);
-	CV_MAT_ELEM((*map_matrix), float, 1, 0) = sin(a);
-	CV_MAT_ELEM((*map_matrix), float, 1, 1) = cos(a);
-	CV_MAT_ELEM((*map_matrix), float, 1, 2) = c.y - c.x * sin(a) - c.y * cos(a);
-}
-
-void ocvCreateHandIconWithHand(IplImage *layer, ocvHand myHand) {
-	char *handPaths[] = { "1456448219_icon_2_rock_n_roll.png", "1456448230_icon_3_high_five.png" };
-	UIImage *uiImage = [[UIImage alloc] initWithContentsOfFile:UtilsResourcePathWithName(@(handPaths[(myHand.fingers == 5)]))];
-	IplImage *iplImage = IplImageFromCGImage(uiImage.CGImage);
-	[uiImage release];
-
-	CvSize spriteSize = cvGetSize(iplImage);
-
-	if (myHand.orientation) {
-		cvFlip(iplImage, NULL, 1);
-	}
-
-	{
-		IplImage *tmp1d = cvCreateImage(cvGetSize(iplImage), iplImage->depth, 1);
-		cvCvtColor(iplImage, tmp1d, CV_BGR2GRAY);
-		cvNot(tmp1d, tmp1d);
-		cvMerge(tmp1d, tmp1d, tmp1d, NULL, iplImage);
-		cvThreshold(tmp1d, tmp1d, 2, 255, CV_THRESH_BINARY);
-		cvReleaseImage(&tmp1d);
-	}
-	IplImage *tmp3d = cvCreateImage(cvGetSize(layer), layer->depth, layer->nChannels);
-	ocvResizeFrame(iplImage, tmp3d);
-	cvReleaseImage(&iplImage);
-
-	cvTranslateImage2(tmp3d, tmp3d, myHand.center.x - spriteSize.width / 2, myHand.center.y - spriteSize.height / 2);
-
-	float phaseI = M_PI / 2 + cvPointPhase(cvPointSubtract(myHand.indexTip, myHand.center));
-	CvMat* map_matrix = cvCreateMat(2, 3, CV_32FC1);
-	ocv2DAffineMatrix(map_matrix, cvPointTo32f(myHand.center), phaseI);
-	cvWarpAffine(tmp3d, tmp3d, map_matrix, CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS, cvScalarAll(0));
-
-	cvCopy(tmp3d, layer, NULL);
-	cvReleaseImage(&tmp3d);
-}
-
 CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSMutableDictionary *options) {
 	if (!imageRef0) { present(1, "!imageRef0"); return nil; }
 	NSLog2("operating");
@@ -688,7 +631,13 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 			if (ret && (myHand.fingers > 2 && myHand.fingers < 6)) {
 				NSLog2("draw hand");
 				//ocvDrawHandInfo(overlay, myHand);
-				ocvCreateHandIconWithHand(overlay, myHand);
+				char *handPaths[] = { "1456448219_icon_2_rock_n_roll.png", "1456448230_icon_3_high_five.png" };
+				UIImage *uiImage = [[UIImage alloc] initWithContentsOfFile:UtilsResourcePathWithName(@(handPaths[(myHand.fingers == 5)]))];
+				IplImage *sprite = IplImageFromCGImage(uiImage.CGImage);
+				[uiImage release];
+
+				ocvCreateHandIconWithHand(overlay, sprite, myHand);
+				cvReleaseImage(&sprite);
 				cvCopyNonZero(overlay, tmp3d, NULL);
 			} else {
 				cvDrawContours(red3d, seq, CV_RGB(0,0,255), CV_RGB(0,0,255), 0, CV_FILLED, 8, cvPoint(0, 0));

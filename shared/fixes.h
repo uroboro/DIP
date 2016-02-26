@@ -23,4 +23,8 @@ DIP_EXTERN void cvFillConvexPoly2(CvArr* img, CvSeq *points, CvScalar color, int
 
 DIP_EXTERN void cvBox2(CvArr* img, CvBox2D rect, CvScalar color, int thickness, int line_type, int shift);
 
+DIP_EXTERN void ocvResizeFrame(IplImage *src, IplImage *dst);
+
+DIP_EXTERN void ocv2DAffineMatrix(CvMat* map_matrix, CvPoint2D32f c, float a);
+
 #endif /* FIXES_H */

@@ -117,3 +117,18 @@ void cvBox2(CvArr* img, CvBox2D rect, CvScalar color, int thickness, int line_ty
 		cvLine(img, cvPoint((int)boxPoints[3].x, (int)boxPoints[3].y), cvPoint((int)boxPoints[0].x, (int)boxPoints[0].y), color, thickness, line_type, shift);
 	}
 }
+
+void ocvResizeFrame(IplImage *src, IplImage *dst) {
+		cvSetImageROI(dst, cvRect(0, 0, src->width, src->height));
+		cvResize(src, dst, CV_INTER_LINEAR);
+		cvResetImageROI(dst);
+}
+
+void ocv2DAffineMatrix(CvMat* map_matrix, CvPoint2D32f c, float a) {
+	CV_MAT_ELEM((*map_matrix), float, 0, 0) = cos(a);
+	CV_MAT_ELEM((*map_matrix), float, 0, 1) = -sin(a);
+	CV_MAT_ELEM((*map_matrix), float, 0, 2) = c.x - c.x * cos(a) + c.y * sin(a);
+	CV_MAT_ELEM((*map_matrix), float, 1, 0) = sin(a);
+	CV_MAT_ELEM((*map_matrix), float, 1, 1) = cos(a);
+	CV_MAT_ELEM((*map_matrix), float, 1, 2) = c.y - c.x * sin(a) - c.y * cos(a);
+}
