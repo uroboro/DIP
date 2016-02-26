@@ -630,6 +630,15 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 		NSLog2("use original");
 		cvCopy(iplImage, tmp3d,  NULL);
 	}
+	{
+		IplImage *red1d = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 1);
+		IplImage *red3d = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 3);
+		cvNot(tmp1d, red1d);
+		cvMerge(red1d, NULL, NULL, NULL, red3d);
+		cvAddWeighted(tmp3d, 0.7, red3d, 0.3, 0, tmp3d);
+		cvReleaseImage(&red1d);
+		cvReleaseImage(&red3d);
+	}
 	//goto end;
 
 	NSLog2("get contours");
@@ -648,7 +657,7 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 
 		// Copy overlay and text to output image
 		if (ret) {
-			ocvDrawHandInfo(overlay, myHand);
+			if (myHand.fingers > 2 && myHand.fingers < 6) ocvDrawHandInfo(overlay, myHand);
 			cvCopyNonZero(overlay, tmp3d, NULL);
 			cvReleaseImage(&overlay);
 		}
