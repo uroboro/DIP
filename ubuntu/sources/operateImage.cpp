@@ -241,11 +241,37 @@ char operateImage(Userdata *userdata) {
 	filterByVolume(tmp1d, tmp1d, tmp1d->width * tmp1d->height / 100);
 	cvSmooth(tmp1d, tmp1d, CV_GAUSSIAN, 11, 0, 0, 0);
 	cvThreshold(tmp1d, tmp1d, 127, 255, CV_THRESH_BINARY);
-	CVSHOW("smoothed", 800, 300, 320, 240, tmp1d);
+	//filterByVolume(tmp1d, tmp1d, tmp1d->width * tmp1d->height / 100);
+	CVSHOW("working mask", 400, 0, 320, 240, tmp1d);
+
+	{
+		static int accValue = 512;
+		if (0) {
+			cvNamedWindow("memory", 0);
+			cvResizeWindow("memory", 640, 240);
+			cvCreateTrackbar("accValue", "memory", &accValue, 1024, NULL);
+		}
+		static IplImage *backgroundAcc = cvCreateImage(cvGetSize(image1), IPL_DEPTH_32F, 1);
+		cvRunningAvg(tmp1d, backgroundAcc, (double)accValue / 1024, NULL);
+		cvConvertScale(backgroundAcc, tmp1d, 1, 0);
+		//cvThreshold(tmp1d, tmp1d, 224, 255, CV_THRESH_BINARY);
+		CVSHOW("memory mask", 800, 0, 320, 240, tmp1d);
+	}
+
 	cvCopy2(tmp3d, tmp3d, tmp1d);
 	//goodCorners(tmp1d, tmp3d, 30);
 	//houghLines(tmp3d, tmp3d);
-	doFaces(image1, tmp3d, 4);
+	//doFaces(image1, tmp3d, 4);
+
+
+	IplImage *cannyMask = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 1);
+	cvCvtColor(tmp3d, cannyMask, CV_BGR2GRAY);
+	cvSmooth(cannyMask, cannyMask, CV_GAUSSIAN, 5, 0, 0, 0);
+	unsigned int lThreshold = 50;
+	unsigned int hThreshold = 200;
+	cvCanny(cannyMask, cannyMask, lThreshold, hThreshold, 3);
+	CVSHOW("canny mask", 400, 300, 320, 240, cannyMask);
+	cvReleaseImage(&cannyMask);
 
 #define USE_FACE 0
 #if USE_FACE
