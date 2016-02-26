@@ -168,57 +168,6 @@ void houghLines(IplImage *src, IplImage *dst) {
 	}
 }
 
-void doFaces(IplImage *src, IplImage *dst, double scale) {
-	// Make image grayscale
-	IplImage *tmp1d = NULL;
-	if (src->nChannels == 1) {
-		tmp1d = cvCloneImage(src);
-	} else {
-		tmp1d = cvCreateImage(cvGetSize(src), src->depth, 1);
-		cvCvtColor(src, tmp1d, CV_BGR2GRAY);
-	}
-
-	// Scale down image
-	CvSize srcSize = cvGetSize(src);
-	double fx = 1 / scale;
-	srcSize.width = (int)cvRound(fx * srcSize.width);
-	srcSize.height = (int)cvRound(fx * srcSize.height);
-
-	IplImage *smallImg = cvCreateImage(srcSize, IPL_DEPTH_8U, 1);
-	cvResize(tmp1d, smallImg, CV_INTER_LINEAR);
-	cvReleaseImage(&tmp1d);
-
-	cvEqualizeHist(smallImg, smallImg);
-
-	double scale_factor = 1.1;
-	int min_neighbors = 3;
-	int flags = 0
-		//|CASCADE_FIND_BIGGEST_OBJECT
-		//|CASCADE_DO_ROUGH_SEARCH
-		| cv::CASCADE_SCALE_IMAGE;
-	CvSize min_size = cvSize(0,0);
-	CvSize max_size = cvSize(100,100);
-	std::vector<cv::Rect> objects;
-	static cv::CascadeClassifier cascade;
-	if (cascade.empty() && !cascade.load("Resources/haarcascade_frontalface_alt.xml")) {
-		printf("ERROR: Could not load classifier cascade\n");
-		return;
-	}
-	cascade.detectMultiScale(smallImg, objects, scale_factor, min_neighbors, flags, min_size, max_size);
-	cvReleaseImage(&smallImg);
-
-	printf("found %ld objects\r", objects.size());
-	for (size_t i = 0; i < objects.size(); i++) {
-		objects[i].x *= scale;
-		objects[i].y *= scale;
-		objects[i].width *= scale;
-		objects[i].height *= scale;
-	}
-	for (std::vector<cv::Rect>::const_iterator r = objects.begin(); r != objects.end(); r++) {
-		cvRectangle2(dst, (CvRect)*r, cvScalar(0, 0, 255, 0), 3, 8, 0);
-	}
-}
-
 char operateImage(Userdata *userdata) {
 	if (!userdata) {
 		return 0;
