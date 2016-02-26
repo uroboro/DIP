@@ -27,4 +27,6 @@ DIP_EXTERN void ocvResizeFrame(IplImage *src, IplImage *dst);
 
 DIP_EXTERN void ocv2DAffineMatrix(CvMat* map_matrix, CvPoint2D32f c, float a);
 
+DIP_EXTERN void cvClose(CvArr *src, CvArr *dst, CvArr *mask, size_t n);
+
 #endif /* FIXES_H */

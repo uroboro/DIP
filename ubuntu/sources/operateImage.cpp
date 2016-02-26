@@ -87,16 +87,6 @@ void setup(CvSize size) {
 	cvSet(WHITE1D, cvScalarAll(255), NULL);
 }
 
-//#pragma mark - filter functions
-
-void cvClose(CvArr *src, CvArr *dst, CvArr *mask, size_t n) {
-	cvCopy(src, dst, mask);
-	for (size_t i = 0; i < n; i++) {
-		cvErode(dst, dst, NULL, 1);
-		cvDilate(dst, dst, NULL, 1);
-	}
-}
-
 //#pragma mark - Operate image
 
 void afterProcess(Userdata *userdata) {

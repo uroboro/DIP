@@ -132,3 +132,11 @@ void ocv2DAffineMatrix(CvMat* map_matrix, CvPoint2D32f c, float a) {
 	CV_MAT_ELEM((*map_matrix), float, 1, 1) = cos(a);
 	CV_MAT_ELEM((*map_matrix), float, 1, 2) = c.y - c.x * sin(a) - c.y * cos(a);
 }
+
+void cvClose(CvArr *src, CvArr *dst, CvArr *mask, size_t n) {
+	cvCopy(src, dst, mask);
+	//for (size_t i = 0; i < n; i++) {
+		cvErode(dst, dst, NULL, n);
+		cvDilate(dst, dst, NULL, n);
+	//}
+}

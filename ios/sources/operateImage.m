@@ -21,14 +21,6 @@
 #include "try.h"
 #import "utils.h"
 
-void cvClose(CvArr *src, CvArr *dst, CvArr *mask, size_t n) {
-	cvCopy(src, dst, mask);
-	//for (size_t i = 0; i < n; i++) {
-		cvErode(dst, dst, NULL, n);
-		cvDilate(dst, dst, NULL, n);
-	//}
-}
-
 CGImageRef CreateScaledCGImageFromCGImage(CGImageRef image, float scale) {
 	// Get image width, height. We'll use the entire image.
 	int width = CGImageGetWidth(image) * scale;
