@@ -619,6 +619,8 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 	IplImage *tmp1d = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 1);
 	cvSet(tmp1d, cvScalarAll(255), NULL);
 
+	IplImage *red3d = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 3);
+
 	// Background subtraction
 	#if 0
 		static IplImage *background = NULL;
@@ -679,12 +681,9 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 	}
 	{ // Add red alpha layer to show ignored areas
 		IplImage *red1d = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 1);
-		IplImage *red3d = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 3);
 		cvNot(tmp1d, red1d);
 		cvMerge(red1d, NULL, NULL, NULL, red3d);
-		cvAddWeighted(tmp3d, 0.7, red3d, 0.3, 0, tmp3d);
 		cvReleaseImage(&red1d);
-		cvReleaseImage(&red3d);
 	}
 	//goto end;
 
@@ -712,14 +711,8 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 				//ocvDrawHandInfo(overlay, myHand);
 				ocvCreateHandIconWithHand(overlay, myHand);
 				cvCopyNonZero(overlay, tmp3d, NULL);
-			} else if (0) {
-				IplImage *red1d = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 1);
-				IplImage *red3d = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 3);
-				cvDrawContours(red1d, seq, cvScalarAll(255), cvScalarAll(255), 0, CV_FILLED, 8, cvPoint(0, 0));
-				cvMerge(red1d, NULL, NULL, NULL, red3d);
-				cvAddWeighted(tmp3d, 0.7, red3d, 0.3, 0, tmp3d);
-				cvReleaseImage(&red1d);
-				cvReleaseImage(&red3d);
+			} else {
+				cvDrawContours(red3d, seq, CV_RGB(0,0,255), CV_RGB(0,0,255), 0, CV_FILLED, 8, cvPoint(0, 0));
 			}
 			cvReleaseImage(&overlay);
 		}
@@ -728,8 +721,11 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 
 	goto end;
 	end:;
+	cvAddWeighted(tmp3d, 0.7, red3d, 0.3, 0, tmp3d);
+
 	NSLog2("end proc");
 	cvReleaseImage(&tmp1d);
+	cvReleaseImage(&red3d);
 	cvReleaseImage(&iplImage);
 
 	{ // On-screen debug data
@@ -758,7 +754,6 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 
 	return imageRefOut;
 }
-
 
 UIImage *operateImageCreate(UIImage *image0, UIImage *image1, NSMutableDictionary *options) {
 	CGImageRef imageRef0 = image0.CGImage;
