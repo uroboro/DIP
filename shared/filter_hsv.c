@@ -32,8 +32,8 @@ DIP_EXTERN int maskByHSV(IplImage *src, IplImage *dst, CvScalar minHSV, CvScalar
 	// Generate mask
 	IplImage *tmp3d = cvCreateImage(cvGetSize(src), src->depth, 3);
 	cvMerge(tmp1dH_mask, tmp1dS_mask, tmp1dV_mask, NULL, tmp3d);
-	cvCvtColor(tmp3d, dst_mask, CV_BGR2GRAY);
-	cvThreshold(dst_mask, dst_mask, 240, 255, CV_THRESH_BINARY);
+	cvCvtColor(tmp3d, dst, CV_BGR2GRAY);
+	cvThreshold(dst, dst, 240, 255, CV_THRESH_BINARY);
 	cvReleaseImage(&tmp3d);
 
 	cvReleaseImage(&tmp1dH_mask);
@@ -45,7 +45,7 @@ DIP_EXTERN int maskByHSV(IplImage *src, IplImage *dst, CvScalar minHSV, CvScalar
 
 int filterByHSV(IplImage *src, IplImage *dst, CvScalar minHSV, CvScalar maxHSV) {
 	IplImage *tmp1d_mask = cvCreateImage(cvGetSize(src), src->depth, 1);
-	maskByHSV(src, minHSV, maxHSV, tmp1d_mask);
+	maskByHSV(src, tmp1d_mask, minHSV, maxHSV);
 	cvCopy2(src, dst, tmp1d_mask);
 	cvReleaseImage(&tmp1d_mask);
 
