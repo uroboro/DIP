@@ -1,4 +1,5 @@
-findfiles = $(foreach ext, c cpp m mm x xm xi xmi, $(wildcard $(1)/*.$(ext)))
+#findfiles = $(foreach ext, c cpp m mm x xm xi xmi, $(wildcard $(1)/*.$(ext)))
+findfiles = $(foreach ext, c cpp, $(wildcard $(1)/*.$(ext)))
 getobjs = $(foreach ext, c cpp m mm x xm xi xmi, $(filter %.o,$(patsubst %.$(ext),%.o,$(1))))
 
 OPENCV_CDFLAGS = `pkg-config --cflags opencv`
@@ -10,7 +11,7 @@ DIP_FILES = $(call findfiles,sources) $(call findfiles,../shared)
 DIP_CFLAGS = $(OPENCV_CFLAGS) -c -Wall -O3 -I ../shared
 DIP_LDFLAGS = $(OPENCV_LDFLAGS)
 
-CC = g++
+CC = clang++
 OBJ_DIR = .objs
 OBJECTS = $(patsubst %,$(OBJ_DIR)/%,$(call getobjs, $(DIP_FILES)))
 EXECUTABLE = exe
