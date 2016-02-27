@@ -17,6 +17,8 @@
 #include "filter_grayscale.h"
 
 #include "ocv_hand.h"
+#include "geometry.h"
+#include "drawing.h"
 
 #include "try.h"
 #import "utils.h"
@@ -79,7 +81,7 @@ void ocvPrefilterImageMask(CvArr *src, IplImage *dst, int grayscaleDistance, CvS
 
 	{ // Distance from grayscale and threshold
 		NSLog2("grayscale");
-		maskByDistance2Grayscale(src, grayscaleDistance, tmp1dg);
+		maskByDistance2Grayscale(src, tmp1dg, grayscaleDistance);
 	}
 
 	{ // Filter out non skin tones
@@ -533,6 +535,7 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 		NSLog2("use original");
 		cvCopy(iplImage, tmp3d,  NULL);
 	}
+	//goto end;
 	{ // Add red alpha layer to show ignored areas
 		IplImage *red1d = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 1);
 		cvNot(tmp1d, red1d);
