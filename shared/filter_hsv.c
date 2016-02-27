@@ -10,6 +10,7 @@ DIP_EXTERN int maskByHSV(IplImage *src, IplImage *dst, CvScalar minHSV, CvScalar
 
 	{ // Get HSV values
 		IplImage *tmp3d = cvCreateImage(cvGetSize(src), src->depth, 3);
+		cvCopy(src, tmp3d, NULL);
 		cvSmooth(tmp3d, tmp3d, CV_GAUSSIAN, 9, 0, 0, 0);
 		cvCvtColor(tmp3d, tmp3d, CV_BGR2HSV);
 		cvSplit(tmp3d, tmp1dH_mask, tmp1dS_mask, tmp1dV_mask, NULL);
