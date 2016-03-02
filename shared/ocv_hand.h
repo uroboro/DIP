@@ -22,6 +22,8 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand);
 
 void ocvDrawHandInfo(IplImage *overlay, ocvHand myHand);
 
+void ocv_handAnalysis(IplImage *src, IplImage *dst);
+
 DIP_EXTERN_END
 
 #endif /* OCV_HAND */
