@@ -14,29 +14,11 @@
 
 #define OCV_GRAYSCALE_DISTANCE 20
 
-CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSMutableDictionary *options) {
-	if (!imageRef0) { present(1, "!imageRef0"); return nil; }
-	NSLog2("operating");
-
-	#define SCALE 0
-	#if SCALE
-		float floatingValue = options[@"floatingValue"] ? ((NSNumber *)options[@"floatingValue"]).floatValue : 1;
-		NSLog2(([NSString stringWithFormat:@"floatingValue %@", options[@"floatingValue"]]).UTF8String);
-		// Scale down input image
-		if (floatingValue < 1) { CGImageRef tmp = CreateScaledCGImageFromCGImage(imageRef0, floatingValue); if (tmp) { imageRef0 = tmp; } }
-	#endif
-
-	IplImage *iplImage = IplImageFromCGImage(imageRef0);
-	if (!iplImage) { present(1, "!iplImage"); return nil; }
+void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 	double _time = (double)getTickCount();
 
-	//test orientation handling
-	//if ([options[@"inputType"] isEqualToString:@"image"]) { cvFlip(iplImage, NULL, 1); }
-
-	if(0){ CvScalar s = cvScalarRGBFromHSV(CV_RGB(0,255,127)); s.val[3] = 255; } // for unused function warning
-
-	IplImage *tmp3d = cvCreateImage(cvGetSize(iplImage), iplImage->depth, 3);
-	cvCopy(iplImage, tmp3d,  NULL);
+	IplImage *tmp3d = cvCreateImage(cvGetSize(src), src->depth, 3);
+	cvCopy(src, tmp3d,  NULL);
 
 	IplImage *tmp1d = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 1);
 	cvSet(tmp1d, cvScalarAll(255), NULL);
@@ -99,7 +81,7 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 		cvCvtColor(tmp3d, tmp3d, CV_BGR2RGB);
 	} else { // Show original
 		NSLog2("use original");
-		cvCopy(iplImage, tmp3d,  NULL);
+		cvCopy(src, tmp3d,  NULL);
 	}
 	//goto end;
 	{ // Add red alpha layer to show ignored areas
@@ -155,7 +137,6 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 	NSLog2("end proc");
 	cvReleaseImage(&tmp1d);
 	cvReleaseImage(&red3d);
-	cvReleaseImage(&iplImage);
 
 	{ // On-screen debug data
 		_time = ((double)getTickCount() - _time) / getTickFrequency();
@@ -170,16 +151,42 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSM
 			cvPutText(tmp3d, buf, cvPoint(10, tmp3d->height - 10), &font, CV_RGB(0, 255, 0));
 		}
 	}
-	//options[@"fps"] = @((int)(ceil(1/_time)));
-	options[@"fps"] = @(5);
-
-	CGImageRef imageRefOut = CGImageFromIplImage(tmp3d);
+	cvCopy(tmp3d, dst, NULL);
 	cvReleaseImage(&tmp3d);
+}
+
+CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSMutableDictionary *options) {
+	if (!imageRef0) { present(1, "!imageRef0"); return nil; }
+	NSLog2("operating");
+
+	#define SCALE 0
+	#if SCALE
+		float floatingValue = options[@"floatingValue"] ? ((NSNumber *)options[@"floatingValue"]).floatValue : 1;
+		NSLog2(([NSString stringWithFormat:@"floatingValue %@", options[@"floatingValue"]]).UTF8String);
+		// Scale down input image
+		if (floatingValue < 1) { CGImageRef tmp = CreateScaledCGImageFromCGImage(imageRef0, floatingValue); if (tmp) { imageRef0 = tmp; } }
+	#endif
+
+	IplImage *iplInput = IplImageFromCGImage(imageRef0);
+	if (!iplInput) { present(1, "!iplInput"); return nil; }
+
+	IplImage *iplOutput = cvCloneImage(iplInput);
+
+	//test orientation handling
+	//if ([options[@"inputType"] isEqualToString:@"image"]) { cvFlip(iplImage, NULL, 1); }
+
+	ocv_handAnalysis(iplInput, iplOutput);
+	cvReleaseImage(&iplInput);
+
+	CGImageRef imageRefOut = CGImageFromIplImage(iplOutput);
+	cvReleaseImage(&iplOutput);
 
 	#if SCALE
 		// Scale up output image
 		if (floatingValue < 1) { CGImageRef tmp = CreateScaledCGImageFromCGImage(imageRefOut, 1/floatingValue); if (tmp) { CGImageRelease(imageRefOut); imageRefOut = tmp; } }
 	#endif
+
+	options[@"fps"] = @(5);
 
 	return imageRefOut;
 }
