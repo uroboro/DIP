@@ -107,8 +107,8 @@ size_t calcularHistograma(IplImage *src, size_t *binsCount, size_t **bins) {
 	if (src == NULL || bins == NULL) {
 		return -1;
 	}
-	static _trueChannels = 1;
-	static _trueChannel = 1;
+	static int _trueChannels = 1;
+	static int _trueChannel = 1;
 	int channels = src->nChannels;
 	int hist_size = 256;
 	if (*bins == NULL) {
@@ -164,8 +164,8 @@ void graficarHistograma(IplImage *dst, size_t binsCount, size_t *bins) {
 		ini = 1;
 		hist_color = cvScalarAll(255);
 	}
-	static _trueChannels = 1;
-	static _trueChannel = 1;
+	static int _trueChannels = 1;
+	static int _trueChannel = 1;
 	int hist_size = 256;
 
 	//cvSet(ImagenHistorial, cvScalarAll(0), 0);
