@@ -2,8 +2,6 @@
 #include "ocv_histogram.h"
 
 #include <string.h>
-#include <opencv2/core/core_c.h>
-#include <opencv2/imgproc/imgproc_c.h>
 
 DIP_EXTERN double *data_histogram(double frequencies[256], unsigned char *src,
 	unsigned int width, unsigned int height, unsigned int widthStep);
@@ -169,7 +167,7 @@ void graficarHistograma(IplImage *dst, size_t binsCount, size_t *bins) {
 	static _trueChannels = 1;
 	static _trueChannel = 1;
 	int hist_size = 256;
-	
+
 	//cvSet(ImagenHistorial, cvScalarAll(0), 0);
 
 	//Actuo en funcion la cantidad de colores de la imagen
@@ -216,7 +214,7 @@ void graficarHistograma(IplImage *dst, size_t binsCount, size_t *bins) {
 		_trueChannel = 1;
 
 		hist_color = cvScalarAll(255);
-		
+
 		cvMerge(channelA, channelB, channelC, NULL, dst);
 
 		cvReleaseImage(&channelA);

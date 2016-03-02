@@ -1,6 +1,5 @@
 #include "filter_volume.h"
 #include <stdio.h>
-#include <opencv2/imgproc/imgproc_c.h>
 
 #include "fixes.h"
 

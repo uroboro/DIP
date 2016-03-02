@@ -1,5 +1,4 @@
 #include "fixes.h"
-#include <opencv2/imgproc/imgproc_c.h>
 
 void cvCopy2(CvArr *src, CvArr *dst, CvArr *mask) {
 	IplImage *tmp1dB = cvCreateImage(cvGetSize(src), IPL_DEPTH_8U, 1);

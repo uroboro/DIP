@@ -1,7 +1,7 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
-#include <opencv2/core/core_c.h>
+#include "common.h"
 
 // r*e^(j*f) -> (x, y)
 #define cvPointPolar(r, f)		cvPointFrom32f(cvPoint2D32f((r) * cos((f)), (r) * sin((f))))

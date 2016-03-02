@@ -1,5 +1,4 @@
 #include "filter_grayscale.h"
-#include <opencv2/imgproc/imgproc_c.h>
 
 int maskByDistance2Grayscale(IplImage *src, IplImage *dst, int minDistance) {
 	IplImage *tmp3d = cvCreateImage(cvGetSize(src), src->depth, 3);

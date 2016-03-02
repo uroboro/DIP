@@ -1,8 +1,6 @@
 #ifndef CLICK_H
 #define CLICK_H
 
-#include <opencv2/core/core_c.h>
-
 #include "common.h"
 
 DIP_EXTERN typedef struct _click {

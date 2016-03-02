@@ -1,5 +1,4 @@
 #include "filter_hsv.h"
-#include <opencv2/imgproc/imgproc_c.h>
 
 #include "fixes.h"
 

@@ -1,5 +1,4 @@
 #include "drawing.h"
-#include <opencv2/imgproc/imgproc_c.h>
 
 static void hsvtorgb(unsigned char *r, unsigned char *g, unsigned char *b, unsigned char h, unsigned char s, unsigned char v) {
 	unsigned char region, fpart, p, q, t;

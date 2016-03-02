@@ -1,8 +1,6 @@
 #ifndef OCV_HAND
 #define OCV_HAND
 
-#include <opencv2/core/core_c.h>
-
 #include "common.h"
 
 DIP_EXTERN_BEGIN

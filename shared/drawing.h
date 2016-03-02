@@ -1,8 +1,6 @@
 #ifndef DRAWING_H
 #define DRAWING_H
 
-#include <opencv2/core/core_c.h>
-
 #include "common.h"
 
 DIP_EXTERN CvScalar cvScalarRGBFromHSV(CvScalar hsv);

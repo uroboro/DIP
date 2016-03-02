@@ -2,7 +2,6 @@
 #include "ocv_histogramac.h"
 
 #include <stdlib.h>
-#include <opencv2/imgproc/imgproc_c.h>
 
 DIP_EXTERN double *data_histogramac(double frequencies[256], unsigned char *src,
 	unsigned int width, unsigned int height, unsigned int widthStep);

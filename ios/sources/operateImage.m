@@ -3,8 +3,6 @@
 #include "operateImage.h"
 #include "UIImage+IplImage.h"
 
-#include <opencv2/imgproc/imgproc_c.h>
-
 #include "fixes.h"
 #include "fixes.hpp"
 
@@ -13,8 +11,6 @@
 
 #include "try.h"
 #import "utils.h"
-
-#define DO_ONCE(block) { static dispatch_once_t once ## __LINE__; dispatch_once(&once ## __LINE__, ^{block}); }
 
 #define OCV_GRAYSCALE_DISTANCE 20
 

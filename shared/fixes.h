@@ -1,8 +1,6 @@
 #ifndef FIXES_H
 #define FIXES_H
 
-#include <opencv2/core/core_c.h>
-
 #include "common.h"
 
 DIP_EXTERN void cvCopy2(CvArr *src, CvArr *dst, CvArr *mask);
