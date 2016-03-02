@@ -23,49 +23,6 @@
 #include "try.h"
 #import "utils.h"
 
-CGImageRef CreateScaledCGImageFromCGImage(CGImageRef image, float scale) {
-	// Get image width, height. We'll use the entire image.
-	int width = CGImageGetWidth(image) * scale;
-	int height = CGImageGetHeight(image) * scale;
-
-	// Declare the number of bytes per row. Each pixel in the bitmap in this
-	// example is represented by 4 bytes; 8 bits each of red, green, blue, and
-	// alpha.
-	int bitmapBytesPerRow   = (width * 4);
-	int bitmapByteCount     = (bitmapBytesPerRow * height);
-
-	// Allocate memory for image data. This is the destination in memory
-	// where any drawing to the bitmap context will be rendered.
-	void *bitmapData = malloc(bitmapByteCount);
-	if (bitmapData == NULL) {
-		return nil;
-	}
-
-	// Create the bitmap context. We want pre-multiplied ARGB, 8-bits
-	// per component. Regardless of what the source image format is
-	// (CMYK, Grayscale, and so on) it will be converted over to the format
-	// specified here by CGBitmapContextCreate.
-	CGColorSpaceRef colorspace = CGImageGetColorSpace(image);
-	CGContextRef context = CGBitmapContextCreate(bitmapData, width, height, 8,
-		bitmapBytesPerRow, colorspace, kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst);
-	CGColorSpaceRelease(colorspace);
-
-	if (context == NULL)
-		// error creating context
-		return nil;
-
-	// Draw the image to the bitmap context. Once we draw, the memory
-	// allocated for the context for rendering will then contain the
-	// raw image data in the specified color space.
-	CGContextDrawImage(context, CGRectMake(0, 0, width, height), image);
-
-	CGImageRef imgRef = CGBitmapContextCreateImage(context);
-	CGContextRelease(context);
-	free(bitmapData);
-
-	return imgRef;
-}
-
 #define NSLog2(message) NSLog(@"XXX Reached line \e[31m%d\e[0m, message: \e[32m%s\e[0m", __LINE__, message);
 
 #define DO_ONCE(block) { static dispatch_once_t once ## __LINE__; dispatch_once(&once ## __LINE__, ^{block}); }

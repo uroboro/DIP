@@ -107,3 +107,33 @@ UIImage *scaleAndRotateImage(UIImage *image) {
 
 	return imageCopy;
 }
+
+CGImageRef CreateScaledCGImageFromCGImage(CGImageRef image, CGFloat scale) {
+	int width = CGImageGetWidth(image) * scale;
+	int height = CGImageGetHeight(image) * scale;
+
+	int bitmapBytesPerRow   = (width * 4);
+	int bitmapByteCount     = (bitmapBytesPerRow * height);
+
+	void *bitmapData = malloc(bitmapByteCount);
+	if (bitmapData == NULL) {
+		return nil;
+	}
+
+	CGColorSpaceRef colorspace = CGImageGetColorSpace(image);
+	CGContextRef context = CGBitmapContextCreate(bitmapData, width, height, 8,
+		bitmapBytesPerRow, colorspace, kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst);
+	CGColorSpaceRelease(colorspace);
+
+	if (context == NULL) {
+		return nil;
+	}
+
+	CGContextDrawImage(context, CGRectMake(0, 0, width, height), image);
+
+	CGImageRef imgRef = CGBitmapContextCreateImage(context);
+	CGContextRelease(context);
+	free(bitmapData);
+
+	return imgRef;
+}
