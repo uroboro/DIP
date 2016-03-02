@@ -18,6 +18,12 @@ typedef struct ocvHand {
 
 void ocvCreateHandIconWithHand(IplImage *layer, IplImage *sprite, ocvHand myHand);
 
+void ocvPrefilterImageMask(CvArr *src, IplImage *dst, int grayscaleDistance, CvScalar minScalar, CvScalar maxScalar);
+
+int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand);
+
+void ocvDrawHandInfo(IplImage *overlay, ocvHand myHand);
+
 DIP_EXTERN_END
 
 #endif /* OCV_HAND */
