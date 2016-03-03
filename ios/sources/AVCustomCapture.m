@@ -22,21 +22,29 @@ AVCaptureSession *createCaptureSession(id<AVCaptureVideoDataOutputSampleBufferDe
 }
 
 - (void)setFPS:(int32_t)fps {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	if (kCFCoreFoundationVersionNumber <= 700) {
 		AVCaptureVideoDataOutput *output = (AVCaptureVideoDataOutput *)_session.outputs[0];
 
-		#pragma clang diagnostic push
-		#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		output.minFrameDuration = CMTimeMake(1, fps);
-		#pragma clang diagnostic pop
+	} else if (kCFCoreFoundationVersionNumber <= 800) {
+		if (_connection && _connection.isVideoMinFrameDurationSupported) {
+			_connection.videoMinFrameDuration = CMTimeMake(1, fps);
+		}
 	} else {
-		if (_connection) {
-			#pragma clang diagnostic push
-			#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-			[_connection setVideoMinFrameDuration:CMTimeMake(1, fps)];
-			#pragma clang diagnostic pop
+		AVCaptureDeviceInput *input = (AVCaptureDeviceInput *)_session.inputs[0];
+		NSError *error = nil;
+		if ([input.device lockForConfiguration:&error]) {
+			@try {
+				input.device.activeVideoMinFrameDuration = CMTimeMake(1, fps);
+			}
+			@catch ( NSException *e ) {
+			}
+			[input.device unlockForConfiguration];
 		}
 	}
+	#pragma clang diagnostic pop
 }
 
 - (void)setVideoOrientation:(AVCaptureVideoOrientation)videoOrientation {
@@ -147,15 +155,8 @@ AVCaptureVideoDataOutput *createCaptureDeviceOutputWithDelegate(id<AVCaptureVide
 	dispatch_release(queue);
 
 	// Specify the pixel format
-	output.videoSettings =
-				[NSDictionary dictionaryWithObject:
-					[NSNumber numberWithInt:kCVPixelFormatType_32BGRA]
-					forKey:(id)kCVPixelBufferPixelFormatTypeKey];
+	output.videoSettings = @{ (id)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA)};
 
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-	output.minFrameDuration = CMTimeMake(1, 30);
-	#pragma clang diagnostic pop
 	return output;
 }
 
@@ -191,7 +192,7 @@ CGImageRef createMirrorImage(CGImageRef imageRef) {
 
 	CGContextTranslateCTM(context, width, height);
 	CGContextRotateCTM(context, M_PI);
-//	CGContextScaleCTM(context, 1, -1);
+	//CGContextScaleCTM(context, 1, -1);
 
 	CGContextDrawImage(context, CGRectMake(0, 0, width, height), imageRef);
 	CGImageRef output = CGBitmapContextCreateImage(context);
