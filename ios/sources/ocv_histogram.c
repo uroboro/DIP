@@ -40,7 +40,7 @@ IplImage *ocv_histogram(IplImage *image) {
 #if 1
 	size_t binsCount = 0;
 	size_t *bins = NULL;
-	size_t ret = calcularHistograma(image, &binsCount, &bins);
+	calcularHistograma(image, &binsCount, &bins);
 	IplImage *subimage = cvCreateImage(cvGetSize(image), IPL_DEPTH_8U, 3);
 	graficarHistograma(subimage, binsCount, bins);
 	cvReleaseImage(&subimage); //return subimage;

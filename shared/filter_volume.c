@@ -47,10 +47,10 @@ int filterByVolume(IplImage *src, IplImage *dst, long minVolume) {
 
 	CvMemStorage *storage = cvCreateMemStorage(0);
 	CvSeq *contours = NULL;
-	int n = cvFindContours2(tmp1d, storage, &contours, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_NONE, cvPoint(0, 0));
+	cvFindContours2(tmp1d, storage, &contours, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_NONE, cvPoint(0, 0));
 	cvReleaseImage(&tmp1d);
 
-	int area = recursiveContoursDescription(src, contours, src->width * src->height, minVolume, 0);
+	recursiveContoursDescription(src, contours, src->width * src->height, minVolume, 0);
 	recursiveContoursDraw(tmp3d, contours, minVolume, 0);
 
 	cvReleaseMemStorage(&storage);
