@@ -187,16 +187,16 @@ UIKIT_EXTERN NSString *rvcName(void) {
 }
 
 - (void)setCapturedImage:(UIImage *)image {
-	image = scaleAndRotateImage(image);
-	_currentImage = image;
+	[_currentImage release];
+	_currentImage = UIImageCreateApplyingMetadata(image);
 
 	CGRect availableRect = UtilsAvailableScreenRect();
-	CGFloat k = floor(image.size.height / image.size.width * availableRect.size.width);
+	CGFloat k = floor(_currentImage.size.height / _currentImage.size.width * availableRect.size.width);
 
 	[_actionButton setFrame:CGRectMake(0, 0, availableRect.size.width, k)];
-	[_actionButton setBackgroundImage:image forState:UIControlStateNormal];
+	[_actionButton setBackgroundImage:_currentImage forState:UIControlStateNormal];
 
-	[UIImagePNGRepresentation(image) writeToFile:UtilsDocumentPathWithName(@"Photo.png") atomically:YES];
+	[UIImagePNGRepresentation(_currentImage) writeToFile:UtilsDocumentPathWithName(@"Photo.png") atomically:YES];
 
 	[self processImage];
 }
@@ -282,7 +282,7 @@ UIKIT_EXTERN NSString *rvcName(void) {
 - (void)imagePickerController:(UIImagePickerController *)picker
 		didFinishPickingImage:(UIImage *)image
 		editingInfo:(NSDictionary *)editingInfo {
-// Available in iOS 2.0 - 3.0.
+	// Available in iOS 2.0 - 3.0.
 	NSMutableDictionary *_editingInfo = [NSMutableDictionary dictionaryWithDictionary:editingInfo];
 	[_editingInfo setObject:image forKey:UIImagePickerControllerOriginalImage];
 	[_editingInfo setObject:(NSString *)kUTTypeImage forKey:UIImagePickerControllerMediaType];
@@ -296,9 +296,8 @@ UIKIT_EXTERN NSString *rvcName(void) {
 	NSString *mediaType = [info objectForKey:UIImagePickerControllerMediaType];
 
 	// Handle a still image capture
-	if (CFStringCompare((CFStringRef)mediaType, kUTTypeImage, 0) == kCFCompareEqualTo) {
-		UIImage *originalImage = (UIImage *) [info objectForKey:
-			UIImagePickerControllerOriginalImage];
+	if ([mediaType isEqualToString:(NSString *)kUTTypeImage]) {
+		UIImage *originalImage = (UIImage *)[info objectForKey:UIImagePickerControllerOriginalImage];
 		[self setCapturedImage:originalImage];
 	}
 

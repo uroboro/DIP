@@ -1,9 +1,7 @@
-#import <MobileCoreServices/MobileCoreServices.h>
 #import "AVCustomCapture.h"
+#import "ImageUtils.h"
 
 #import "common.h"
-
-CGImageRef createCGImageRefFromSampleBuffer(CMSampleBufferRef sampleBuffer, BOOL mirrored);
 
 AVCaptureDeviceInput *getCaptureDeviceInputWithDevicePosition(AVCaptureDevicePosition captureDevicePosition);
 AVCaptureVideoDataOutput *createCaptureDeviceOutputWithDelegate(id<AVCaptureVideoDataOutputSampleBufferDelegate> delegate);
@@ -108,8 +106,12 @@ AVCaptureSession *createCaptureSession(id<AVCaptureVideoDataOutputSampleBufferDe
 
 	// Create a UIImage from the sample buffer data
 	BOOL mirrored = (_devicePosition == AVCaptureDevicePositionBack)? NO : YES;
-	CGImageRef imageRef = createCGImageRefFromSampleBuffer(sampleBuffer, mirrored);
-
+	CGImageRef imageRef = CGImageCreateFromSampleBuffer(sampleBuffer);
+	if (mirrored) {
+		CGImageRef image = CGImageCreateMirrorImage(imageRef);
+		CGImageRelease(imageRef);
+		imageRef = image;
+	}
 	// Use the image
 	if (_delegate) {
 		[_delegate getCGImage:imageRef];
@@ -180,62 +182,4 @@ AVCaptureSession *createCaptureSession(id<AVCaptureVideoDataOutputSampleBufferDe
 	[output release];
 
 	return session;
-}
-
-
-CGImageRef createMirrorImage(CGImageRef imageRef) {
-	size_t width = CGImageGetWidth(imageRef);
-	size_t height = CGImageGetHeight(imageRef);
-
-	UIGraphicsBeginImageContext(CGSizeMake(width, height));
-	CGContextRef context = UIGraphicsGetCurrentContext();
-
-	CGContextTranslateCTM(context, width, height);
-	CGContextRotateCTM(context, M_PI);
-	//CGContextScaleCTM(context, 1, -1);
-
-	CGContextDrawImage(context, CGRectMake(0, 0, width, height), imageRef);
-	CGImageRef output = CGBitmapContextCreateImage(context);
-	CGContextRelease(context);
-
-	return output;
-}
-
-// Create a UIImage from sample buffer data
-CGImageRef createCGImageRefFromSampleBuffer(CMSampleBufferRef sampleBuffer, BOOL mirrored) {
-	// Get a CMSampleBuffer's Core Video image buffer for the media data
-	CVImageBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
-	// Lock the base address of the pixel buffer
-	CVPixelBufferLockBaseAddress(imageBuffer, 0);
-
-	// Get the number of bytes per row for the pixel buffer
-	void *baseAddress = CVPixelBufferGetBaseAddress(imageBuffer);
-
-	// Get the number of bytes per row for the pixel buffer
-	size_t bytesPerRow = CVPixelBufferGetBytesPerRow(imageBuffer);
-	// Get the pixel buffer width and height
-	size_t width = CVPixelBufferGetWidth(imageBuffer);
-	size_t height = CVPixelBufferGetHeight(imageBuffer);
-
-	// Create a device-dependent RGB color space
-	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-	// Create a bitmap graphics context with the sample buffer data
-	CGContextRef context = CGBitmapContextCreate(baseAddress, width, height, 8,
-		bytesPerRow, colorSpace, kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst);
-	// Create a Quartz image from the pixel data in the bitmap graphics context
-	CGImageRef quartzImage = CGBitmapContextCreateImage(context);
-	// Unlock the pixel buffer
-	CVPixelBufferUnlockBaseAddress(imageBuffer, 0);
-
-	// Free up the context and color space
-	CGContextRelease(context);
-	CGColorSpaceRelease(colorSpace);
-
-	if (mirrored) {
-		CGImageRef image = createMirrorImage(quartzImage);
-		CGImageRelease(quartzImage);
-		quartzImage = image;
-	}
-
-	return quartzImage;
 }
