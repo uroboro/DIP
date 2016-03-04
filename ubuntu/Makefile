@@ -11,6 +11,17 @@ DIP_FILES = $(call findfiles,sources) $(call findfiles,shared)
 DIP_CFLAGS = $(OPENCV_CFLAGS) -c -Wall -O3 -I shared
 DIP_LDFLAGS = $(OPENCV_LDFLAGS)
 
+# TARGET = native
+# TARGET_CC = clang
+# TARGET_CXX = clang++
+# #ARCHS = x86_64
+# TOOL_NAME = DIP
+# include $(THEOS)/makefiles/common.mk
+# include $(THEOS_MAKE_PATH)/tool.mk
+#
+# test: $(TOOL_NAME)
+# 	@$(THEOS_OBJ_DIR)/$(TOOL_NAME)
+
 CC = clang++
 OBJ_DIR = .objs
 OBJECTS = $(patsubst %,$(OBJ_DIR)/%,$(call getobjs, $(DIP_FILES)))
