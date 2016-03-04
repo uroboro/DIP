@@ -1,7 +1,7 @@
 #include "histogram.h"
 #include <opencv2/imgproc/imgproc_c.h>
 
-size_t calcularHistograma(IplImage *src, size_t *binsCount, size_t **bins) {
+size_t calcularHistograma2(IplImage *src, size_t *binsCount, size_t **bins) {
 	if (src == NULL || bins == NULL) {
 		return -1;
 	}
@@ -34,13 +34,13 @@ size_t calcularHistograma(IplImage *src, size_t *binsCount, size_t **bins) {
 		IplImage *channelC = cvCreateImage(cvGetSize(src), IPL_DEPTH_8U, 1);
 		cvSplit(src, channelA, channelB, channelC, NULL);
 
-		calcularHistograma(channelA, binsCount, bins);
+		calcularHistograma2(channelA, binsCount, bins);
 		cvReleaseImage(&channelA);
 
-		calcularHistograma(channelB, binsCount, bins);
+		calcularHistograma2(channelB, binsCount, bins);
 		cvReleaseImage(&channelB);
 
-		calcularHistograma(channelC, binsCount, bins);
+		calcularHistograma2(channelC, binsCount, bins);
 		cvReleaseImage(&channelC);
 	} else {
 		return -1;
@@ -48,7 +48,7 @@ size_t calcularHistograma(IplImage *src, size_t *binsCount, size_t **bins) {
 	return 0;
 }
 
-void graficarHistograma(IplImage *dst, size_t binsCount, size_t *bins) {
+void graficarHistograma2(IplImage *dst, size_t binsCount, size_t *bins) {
 	static CvScalar hist_color;
 	static char hist_color_init = 0;
 	if (hist_color_init == 0) {
@@ -87,13 +87,13 @@ void graficarHistograma(IplImage *dst, size_t binsCount, size_t *bins) {
 		cvSplit(dst, channelA, channelB, channelC, NULL);
 
 		hist_color = CV_RGB(255, 0, 0);
-		graficarHistograma(channelA, binsCount, bins);
+		graficarHistograma2(channelA, binsCount, bins);
 
 		hist_color = CV_RGB(0, 255, 0);
-		graficarHistograma(channelB, binsCount, bins);
+		graficarHistograma2(channelB, binsCount, bins);
 
 		hist_color = CV_RGB(0, 0, 255);
-		graficarHistograma(channelC, binsCount, bins);
+		graficarHistograma2(channelC, binsCount, bins);
 
 		hist_color = cvScalarAll(255);
 
