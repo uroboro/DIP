@@ -52,7 +52,7 @@
 	#define TRY_ONCE(block) { static int tryAgain ## __LINE__ = 1; if (tryAgain ## __LINE__) { tryAgain ## __LINE__ = tryCPP(^{block}); } }
 #else
 	#define __block
-	#warning Using non-clang "blocks"
+	//#warning Using non-clang "blocks"
 	#define DO_ONCE(block) { static int once ## __LINE__ = 1; if (once ## __LINE__) { once ## __LINE__ = 0; ({block}); } }
 
 	#ifdef __cplusplus
