@@ -70,23 +70,6 @@ void mouseCallback(int event, int x, int y, int flags, void *_userdata) {
 	}
 }
 
-//#pragma mark - helper stuff
-
-static IplImage *BLACK1D = NULL;
-static IplImage *GRAY1D = NULL;
-static IplImage *WHITE1D = NULL;
-
-void setup(CvSize size) {
-	BLACK1D = cvCreateImage(size, IPL_DEPTH_8U, 1);
-	cvSet(BLACK1D, cvScalarAll(0), NULL);
-
-	GRAY1D = cvCreateImage(size, IPL_DEPTH_8U, 1);
-	cvSet(GRAY1D, cvScalarAll(127), NULL);
-
-	WHITE1D = cvCreateImage(size, IPL_DEPTH_8U, 1);
-	cvSet(WHITE1D, cvScalarAll(255), NULL);
-}
-
 //#pragma mark - Operate image
 
 void afterProcess(Userdata *userdata) {
@@ -159,7 +142,7 @@ char operateImage(Userdata *userdata) {
 	//filterByHSV(tmp3d, minScalar, maxScalar, tmp3d);
 
 	IplImage *tmp1d = cvCreateImage(cvGetSize(image1), image1->depth, 1);
-	maskByHSV(tmp3d, minScalar, maxScalar, tmp1d);
+	maskByHSV(tmp3d, tmp1d, minScalar, maxScalar);
 	filterByVolume(tmp1d, tmp1d, tmp1d->width * tmp1d->height / 100);
 	cvSmooth(tmp1d, tmp1d, CV_GAUSSIAN, 11, 0, 0, 0);
 	cvThreshold(tmp1d, tmp1d, 127, 255, CV_THRESH_BINARY);
