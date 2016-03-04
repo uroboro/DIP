@@ -11,23 +11,22 @@ DIP_FILES = $(call findfiles,sources) $(call findfiles,shared)
 DIP_CFLAGS = $(OPENCV_CFLAGS) -c -Wall -O3 -I shared
 DIP_LDFLAGS = $(OPENCV_LDFLAGS)
 
-# TARGET = native
-# TARGET_CC = clang
-# TARGET_CXX = clang++
-# #ARCHS = x86_64
-# TOOL_NAME = DIP
-# include $(THEOS)/makefiles/common.mk
-# include $(THEOS_MAKE_PATH)/tool.mk
-#
-# test: $(TOOL_NAME)
-# 	@$(THEOS_OBJ_DIR)/$(TOOL_NAME)
+TARGET = native:clang
+TARGET_CC = clang
+TARGET_CXX = clang++
+#ARCHS = x86_64
+TOOL_NAME = DIP
+#include $(THEOS)/makefiles/common.mk
+#include $(THEOS_MAKE_PATH)/tool.mk
+
+test: $(TOOL_NAME)
+	@$(or $(THEOS_OBJ_DIR),./)/$(TOOL_NAME)
 
 CC = clang++
 OBJ_DIR = .objs
 OBJECTS = $(patsubst %,$(OBJ_DIR)/%,$(call getobjs, $(DIP_FILES)))
-EXECUTABLE = exe
 
-all: $(DIP_FILES) $(EXECUTABLE)
+all: $(DIP_FILES) $(TOOL_NAME)
 
 $(OBJECTS): | $(OBJ_DIR)
 
@@ -44,12 +43,9 @@ $(OBJ_DIR)/%.o: %.cpp
 	@echo "==> Compilando" $<
 	$(CC) $(DIP_CFLAGS) $< -o $@
 
-$(EXECUTABLE): $(OBJECTS)
+$(TOOL_NAME): $(OBJECTS)
 	@echo -e "==> Linker"
 	$(CC) $^ -o $@ $(DIP_LDFLAGS)
 
-test: $(EXECUTABLE)
-	@./$(EXECUTABLE)
-
 clean:
-	rm -rf $(OBJ_DIR) $(EXECUTABLE)
+	rm -rf $(OBJ_DIR) $(TOOL_NAME)
