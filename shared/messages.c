@@ -1,4 +1,4 @@
 //Horrible hax
-#ifdef __OBJC__
+#ifndef __OBJC__
 #include "messages.ch"
 #endif
