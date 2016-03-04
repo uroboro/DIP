@@ -418,7 +418,7 @@ void ocvDrawHandInfo(IplImage *overlay, ocvHand myHand) {
 }
 
 #include "try.h"
-#include "fixes.hpp"
+#include "fixes2.hpp"
 
 #define OCV_GRAYSCALE_DISTANCE 20
 
