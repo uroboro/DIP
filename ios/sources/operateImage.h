@@ -5,10 +5,10 @@
 
 #import <UIKit/UIImage.h>
 
-DIP_EXTERN NSUInteger startingOperation(void);
-DIP_EXTERN NSUInteger maxOperations(void);
+DIP_EXTERN_BEGIN
 
-DIP_EXTERN CGImageRef operateImageRefCreate(CGImageRef imageRef0, CGImageRef imageRef1, NSMutableDictionary *options);
-DIP_EXTERN UIImage *operateImageCreate(UIImage *image0, UIImage *image1, NSMutableDictionary *options);
+CGImageRef operateImageRefCreate(CGImageRef imageRef, NSMutableDictionary *options);
+
+DIP_EXTERN_END
 
 #endif /* OPERATEIMAGE_H */

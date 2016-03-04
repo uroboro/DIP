@@ -31,38 +31,20 @@
 	[super dealloc];
 }
 
-- (UIImage *)operateImageCreate:(UIImage *)image {
-	UIImage *prevImage = _image;
-	_image = [image retain];
-
-	UIImage *r = operateImageCreate(image, prevImage, _options);
-	[prevImage release];
-
-	return r;
-}
-
-- (void)updateView {
-	if (!_image) { return; }
-
-	UIImage *image = [self operateImageCreate:_image];
-	[self setViewImage:image];
-}
-
 - (void)getCGImage:(CGImageRef)imageRef {
 	if (!imageRef) { return; }
-NSLog(@"XXX Reached line \e[31m%d\e[0m, message: \e[33m%s\e[0m", __LINE__, "getCGImage: called");
 
-	CGImageRef imageRef2 = operateImageRefCreate(imageRef, nil, _options);
-	if (_options[@"fps"]) {
-		[self setFPS:((NSNumber *)_options[@"fps"]).intValue];
-	}
+	CGImageRef imageRef2 = operateImageRefCreate(imageRef, _options);
 	UIImage *image = [[UIImage alloc] initWithCGImage:imageRef2];
 	CGImageRelease(imageRef2);
 
 	[self setViewImage:image];
 
+	if (_options[@"fps"]) {
+		[self setFPS:((NSNumber *)_options[@"fps"]).intValue];
+	}
+
 	[image release];
-NSLog(@"XXX Reached line \e[31m%d\e[0m, message: \e[31m%s\e[0m", __LINE__, "getCGImage: ended");
 }
 
 - (void)setViewImage:(UIImage *)image {

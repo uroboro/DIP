@@ -2,7 +2,6 @@
 #define UIIMAGE_IPLIMAGE_H
 
 #include <CoreGraphics/CGImage.h>
-#include <opencv2/core/core_c.h>
 
 #include "common.h"
 
