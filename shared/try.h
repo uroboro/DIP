@@ -3,6 +3,12 @@
 
 #include "common.h"
 
-DIP_EXTERN int tryCPP(void (^)(void));
+#if defined(__OBJC__)
+typedef void (^tryBlock)(void);
+#else
+typedef void *tryBlock;
+#endif
+
+DIP_EXTERN int tryCPP(tryBlock);
 
 #endif /* TRYCPP_H */

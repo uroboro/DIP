@@ -51,19 +51,24 @@
 	#define DO_ONCE(block) { static dispatch_once_t once ## __LINE__; dispatch_once(&once ## __LINE__, ^{block}); }
 	#define TRY_ONCE(block) { static int tryAgain ## __LINE__ = 1; if (tryAgain ## __LINE__) { tryAgain ## __LINE__ = tryCPP(^{block}); } }
 #else
+	#define __block
 	#warning Using non-clang "blocks"
 	#define DO_ONCE(block) { static int once ## __LINE__ = 1; if (once ## __LINE__) { once ## __LINE__ = 0; ({block}); } }
 
-	#define TRY_ONCE(block) {\
-	    int b = 1;\
-	    try { block; }\
-	    catch (cv::Exception& e) {\
-	        const char* err_msg = e.what();\
-	        UIAlert(@"OpenCV exception caught", [@"The following error has been copied to the clipboard:\n" stringByAppendingString:@(err_msg)]);\
-	        b = 0;\
-	    }\
-	    return b;\
-	}
+	#ifdef __cplusplus
+		#define TRY_ONCE(block) {\
+		    int b = 1;\
+		    try { block; }\
+		    catch (cv::Exception& e) {\
+		        const char* err_msg = e.what();\
+		        UIAlert(@"OpenCV exception caught", [@"The following error has been copied to the clipboard:\n" stringByAppendingString:@(err_msg)]);\
+		        b = 0;\
+		    }\
+		    return b;\
+		}
+	#else
+		#define TRY_ONCE(block)
+	#endif
 #endif
 
 #if DIP_MOBILE && __OBJC__
