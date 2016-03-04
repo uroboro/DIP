@@ -7,8 +7,8 @@ OPENCV_LDFLAGS = -L/usr/lib/x86_64-linux-gnu/ `pkg-config --libs opencv`
 #-stdlib=libc++
 # -fopenmp
 
-DIP_FILES = $(call findfiles,sources) $(call findfiles,../shared)
-DIP_CFLAGS = $(OPENCV_CFLAGS) -c -Wall -O3 -I ../shared
+DIP_FILES = $(call findfiles,sources) $(call findfiles,shared)
+DIP_CFLAGS = $(OPENCV_CFLAGS) -c -Wall -O3 -I shared
 DIP_LDFLAGS = $(OPENCV_LDFLAGS)
 
 CC = clang++
