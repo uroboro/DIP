@@ -8,4 +8,8 @@
 #include <opencv2/highgui/highgui_c.h>
 #endif
 
+#ifdef __cplusplus
+#include <opencv2/core/core.hpp>
+#endif
+
 #endif /* DIP_OPENCV */
