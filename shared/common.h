@@ -49,7 +49,7 @@
 
 #if DIP_DARWIN
 	#define DO_ONCE(block) { static dispatch_once_t once ## __LINE__; dispatch_once(&once ## __LINE__, ^{block}); }
-	#define TRY_ONCE(block) { static int tryAgain ## __LINE__ = 1; if (tryAgain ## __LINE__) { tryAgain ## __LINE__ = tryCPP(^{block}); } }
+	#define TRY_ONCE(block) { static int tryAgain ## __LINE__ = 1; if (tryAgain ## __LINE__) { tryAgain ## __LINE__ = tryCPP(^{block}); }; tryAgain ## __LINE__; }
 #else
 	#define __block
 	//#warning Using non-clang "blocks"
@@ -62,7 +62,7 @@
 					const char* err_msg = e.what(); char buf[1024]; (buf, "OpenCV exception caught: %s", err_msg); present(0, buf); b = 0;\
 				};\
 				b; });\
-			} }
+			}; tryAgain ## __LINE__; }
 	#else
 		#define TRY_ONCE(block) block
 	#endif
@@ -78,17 +78,18 @@
 		objc_msgSend(a, sel_registerName("show"));\
 		objc_msgSend(a, sel_registerName("release"));\
 	})
+	#define NSLog2(message) NSLog(@"XXX Reached line \e[31m%d\e[m, message: \e[32m%s\e[m", __LINE__, message);
 #else
 	#include "messages.h"
 	#define UIAlert(t, m)
 	#define NSLog(...)
+	#define NSLog2(message) present(0, "XXX Reached \e[33m%s\e[m \e[31m%d\e[m, message: \e[32m%s\e[m", __FILE__, __LINE__, message);
 #endif
 
-#define NSLog2(message) NSLog(@"XXX Reached line \e[31m%d\e[0m, message: \e[32m%s\e[0m", __LINE__, message);
 
 #if DIP_DESKTOP
 #define _CVSHOW(name, x, y, w, h, image) { cvNamedWindow(name, 0); if (x > 0 && y > 0) cvMoveWindow(name, x, y); cvResizeWindow(name, w, h); cvShowImage(name, image); }
-#define _CVSHOW(name, x, y, w, h, image) {\
+#define CVSHOW(name, x, y, w, h, image) {\
 	if (image->nChannels == 1) {\
 		IplImage *tmp3d = cvCreateImage(cvGetSize(image), image->depth, 3);\
 		cvMerge(image, image, image, NULL, tmp3d);\
