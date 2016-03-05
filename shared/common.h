@@ -72,10 +72,15 @@
 #endif
 
 #if DIP_MOBILE && __OBJC__
-	#include <objc/runtime.h>
-	#import <UIKit/UIAlertView.h>
+	#import <objc/runtime.h>
+	#import <objc/message.h>
 
-	#define UIAlert(t, m) dispatch_async(dispatch_get_main_queue(), ^{ [[[[objc_getClass("UIAlertView") alloc] initWithTitle:[(id)(t) description] message:[(id)(m) description] delegate:0 cancelButtonTitle:@"OK" otherButtonTitles:0] autorelease] show]; })
+	#define UIAlert(t, m) dispatch_async(dispatch_get_main_queue(), ^{ \
+		id a = objc_msgSend(objc_getClass("UIAlertView"), sel_registerName("alloc"));\
+		objc_msgSend(a, sel_registerName("initWithTitle:message:delegate:cancelButtonTitle:otherButtonTitles:"), objc_msgSend((t), sel_registerName("description")), objc_msgSend((m), sel_registerName("description")), nil, CFSTR("OK"), nil);\
+		objc_msgSend(a, sel_registerName("show"));\
+		objc_msgSend(a, sel_registerName("release"));\
+	})
 #else
 	#define UIAlert(t, m)
 	#define NSLog(...)
