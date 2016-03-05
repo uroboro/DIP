@@ -44,18 +44,20 @@ void ocvCreateHandIconWithHand(IplImage *layer, IplImage *sprite, ocvHand myHand
 #define OCV_OBJECT_WIDTH_HEIGHT_RATIO 2
 #define OCV_ACCUMULATOR_ALPHA 0.3
 
-void ocvPrefilterImageMask(CvArr *src, IplImage *dst, int grayscaleDistance, CvScalar minScalar, CvScalar maxScalar) {
+void ocvPrefilterImageMask(IplImage *src, IplImage *dst, int grayscaleDistance, CvScalar minScalar, CvScalar maxScalar) {
 	IplImage *tmp1dg = cvCreateImage(cvGetSize(dst), dst->depth, 1);
 	IplImage *tmp1dc = cvCreateImage(cvGetSize(dst), dst->depth, 1);
 
 	{ // Distance from grayscale and threshold
 		NSLog2("grayscale");
 		maskByDistance2Grayscale(src, tmp1dg, grayscaleDistance);
+		CVSHOW("grayscale", tmp1dg->width/2, 0, tmp1dg->width/2, tmp1dg->height/2, tmp1dg);
 	}
 
 	{ // Filter out non skin tones
 		NSLog2("skin");
 		maskByHSV(src, tmp1dc, minScalar, maxScalar);
+		CVSHOW("skin", tmp1dc->width/2, 0, tmp1dc->width/2, tmp1dc->height/2, tmp1dc);
 	}
 
 	{
@@ -478,7 +480,7 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 	ocvPrefilterImageMask(tmp3d, tmp1d, OCV_GRAYSCALE_DISTANCE, minScalar, maxScalar);
 	)
 
-	if (0) { // Show masked image
+	if (01) { // Show masked image
 		if (0) { // Show masked image
 			NSLog2("copy masked");
 			cvCopy2(tmp3d, tmp3d, tmp1d);
@@ -498,13 +500,13 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 		cvReleaseImage(&red1d);
 	}
 	//goto end;
-
 	NSLog2("get contours");
 	CvSeq *contourSeq = NULL;
 	cvFindContours2(tmp1d, cvCreateMemStorage(0), &contourSeq, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_NONE, cvPoint(0, 0));
 	// Iterate over each contour
 	int contourCount = 0; for (CvSeq* seq = contourSeq; seq != 0; seq = seq->h_next) contourCount++;
-	NSLog2(([NSString stringWithFormat:@"foreach contour (%d)", contourCount]).UTF8String);
+	{ char buf[32]; sprintf(buf, "foreach contour (%d)", contourCount); NSLog2(buf); }
+#if 01
 	if (contourCount > 0) {
 		for (CvSeq* seq = contourSeq; seq != 0; seq = seq->h_next) {
 			IplImage *overlay = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 3);
@@ -517,15 +519,28 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 			ret = ocvAnalizeContour(seq, overlay, &myHand);
 			)
 
+	if (ret) {
+		CvFont font; double fontSize = 1; cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, fontSize, fontSize, 0, 2, 8);
+		char buf[32]; sprintf(buf, "maybe hand");
+		cvPutText(tmp3d, buf, cvPoint(10, 30), &font, CV_RGB(0, 255, 0));
+	} else {
+		CvFont font; double fontSize = 1; cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, fontSize, fontSize, 0, 2, 8);
+		char buf[32]; sprintf(buf, "no hand");
+		cvPutText(tmp3d, buf, cvPoint(10, 30), &font, CV_RGB(0, 255, 0));
+	}
+
 			// Copy overlay and text to output image
 			if (ret && (myHand.fingers > 2 && myHand.fingers < 6)) {
 				NSLog2("draw hand");
-				//ocvDrawHandInfo(overlay, myHand);
+				#if 0
+				ocvDrawHandInfo(overlay, myHand);
+				#else
 				char *handPaths[] = { "1456448219_icon_2_rock_n_roll.png", "1456448230_icon_3_high_five.png" };
 				IplImage *sprite = ocv_handSpriteCreate(handPaths[(myHand.fingers == 5)]);
 
 				ocvCreateHandIconWithHand(overlay, sprite, myHand);
 				cvReleaseImage(&sprite);
+				#endif
 				cvCopyNonZero(overlay, tmp3d, NULL);
 			} else {
 				cvDrawContours(red3d, seq, CV_RGB(0,0,255), CV_RGB(0,0,255), 0, CV_FILLED, 8, cvPoint(0, 0));
@@ -534,10 +549,10 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 		}
 		cvReleaseMemStorage(&contourSeq->storage);
 	}
-
+#endif
 	goto end;
 	end:;
-	cvAddWeighted(tmp3d, 0.7, red3d, 0.3, 0, tmp3d);
+	//cvAddWeighted(tmp3d, 0.7, red3d, 0.3, 0, tmp3d);
 
 	NSLog2("end proc");
 	cvReleaseImage(&tmp1d);
