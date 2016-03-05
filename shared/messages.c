@@ -11,15 +11,7 @@
 
 #include "messages.h"
 
-typedef enum DBGOutputMode {
-	DBGOutputModeTTY    = 1,
-	DBGOutputModeSyslog = 2,
-#if __OBJC__
-	DBGOutputModeGUI    = 3
-#endif
-} DBGOutputMode;
-
-static DBGOutputMode outputMode = DBGOutputModeTTY;
+static DBGOutputMode _outputMode = DBGOutputModeTTY;
 
 int present(char mode, const char format[], ...) {
 	int r = 0;
@@ -32,17 +24,22 @@ int present(char mode, const char format[], ...) {
 	vsprintf(message, format, args);
 	va_end(args);
 
+	char outputLevel = mode & 0x01;
+	char outputMode = mode & 0xFE;
+	if (!outputMode) {
+		outputMode = _outputMode;
+	}
 	switch (outputMode) {
 	case DBGOutputModeTTY:
-		r = fprintf(mode ? stderr : stdout, "%s\n", message);
+		r = fprintf(outputLevel ? stderr : stdout, "%s\n", message);
 		break;
 	case DBGOutputModeSyslog:
-		syslog(mode ? LOG_ERR : LOG_WARNING, "%s", message);
+		syslog(outputLevel ? LOG_ERR : LOG_WARNING, "%s", message);
 		break;
 #if __OBJC__
 	case DBGOutputModeGUI: {
 			NSString *m = [NSString stringWithUTF8String:message];
-			UIAlert((mode ? @"ERROR" : @"WARNING"), m);
+			UIAlert((outputLevel ? @"ERROR" : @"WARNING"), m);
 		}
 		break;
 #endif
@@ -53,15 +50,15 @@ int present(char mode, const char format[], ...) {
 
 #if __OBJC__
 static void callback(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
-	outputMode = DBGOutputModeGUI;
+	_outputMode = DBGOutputModeGUI;
 }
 #endif
 
 __attribute__((constructor)) static void ctor(int argc, char **argv, char **envp) {
-	outputMode = (isatty(STDIN_FILENO)) ? DBGOutputModeTTY : DBGOutputModeSyslog;
+	_outputMode = (isatty(STDIN_FILENO)) ? DBGOutputModeTTY : DBGOutputModeSyslog;
 
 #if __OBJC__
-	outputMode = ([UIApplication sharedApplication]) ? DBGOutputModeGUI : outputMode;
+	_outputMode = ([UIApplication sharedApplication]) ? DBGOutputModeGUI : outputMode;
 
 	CFNotificationCenterAddObserver(
 		CFNotificationCenterGetLocalCenter(),
