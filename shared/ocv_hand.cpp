@@ -244,6 +244,7 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand) {
 					point = CV_GET_SEQ_ELEM(CvPoint, circleContours, circleContours->total - 1);
 				}
 				if (safeCount < 0) {
+					char buf[32]; sprintf(buf, "circle rotate loop protection failed"); NSLog2(buf);
 					cvReleaseMemStorage(&circleContours->storage);
 					goto cleanUp;
 				}
@@ -480,7 +481,7 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 	ocvPrefilterImageMask(tmp3d, tmp1d, OCV_GRAYSCALE_DISTANCE, minScalar, maxScalar);
 	)
 
-	if (01) { // Show masked image
+	if (0) { // Show masked image
 		if (0) { // Show masked image
 			NSLog2("copy masked");
 			cvCopy2(tmp3d, tmp3d, tmp1d);
@@ -552,7 +553,7 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 #endif
 	goto end;
 	end:;
-	//cvAddWeighted(tmp3d, 0.7, red3d, 0.3, 0, tmp3d);
+	cvAddWeighted(tmp3d, 0.7, red3d, 0.3, 0, tmp3d);
 
 	NSLog2("end proc");
 	cvReleaseImage(&tmp1d);
