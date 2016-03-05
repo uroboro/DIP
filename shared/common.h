@@ -87,7 +87,15 @@
 #define NSLog2(message) NSLog(@"XXX Reached line \e[31m%d\e[0m, message: \e[32m%s\e[0m", __LINE__, message);
 
 #if DIP_DESKTOP
-#define CVSHOW(name, x, y, w, h, image) { cvNamedWindow(name, 0); if (x > 0 && y > 0) cvMoveWindow(name, x, y); cvResizeWindow(name, w, h); cvShowImage(name, image); }
+#define _CVSHOW(name, x, y, w, h, image) { cvNamedWindow(name, 0); if (x > 0 && y > 0) cvMoveWindow(name, x, y); cvResizeWindow(name, w, h); cvShowImage(name, image); }
+#define _CVSHOW(name, x, y, w, h, image) {\
+	if (image->nChannels == 1) {\
+		IplImage *tmp3d = cvCreateImage(cvGetSize(image), image->depth, 3);\
+		cvMerge(image, image, image, NULL, tmp3d);\
+		_CVSHOW(name, x, y, w, h, tmp3d);\
+		cvReleaseImage(&tmp3d);\
+	} else { _CVSHOW(name, x, y, w, h, image); }\
+}
 #else
 #define CVSHOW(name, x, y, w, h, image)
 #endif
