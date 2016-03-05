@@ -47,7 +47,7 @@ int main(int argc, char *argv[], char *envp[]) {
 				continue;
 			}
 
-			cvCopy(cam, input, NULL);
+			cvCvtColor(cam, input, CV_BGR2RGB);
 			if (flip) {
 				cvFlip(input, NULL, 1);
 			}

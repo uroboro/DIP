@@ -8,7 +8,7 @@ void houghLines(IplImage *src, IplImage *dst) {
 		tmp1d = cvCloneImage(src);
 	} else {
 		tmp1d = cvCreateImage(cvGetSize(src), src->depth, 1);
-		cvCvtColor(src, tmp1d, CV_BGR2GRAY);
+		cvCvtColor(src, tmp1d, CV_RGB2GRAY);
 	}
 	cvCanny(tmp1d, tmp1d, 50, 200, 3);
 	std::vector<cv::Vec4i> lines;

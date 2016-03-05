@@ -42,7 +42,7 @@ int filterByVolume(IplImage *src, IplImage *dst, long minVolume) {
 	} else {
 		tmp3d = cvCloneImage(src);
 		tmp1d = cvCreateImage(cvGetSize(src), src->depth, 1);
-		cvCvtColor(src, tmp1d, CV_BGR2GRAY);
+		cvCvtColor(src, tmp1d, CV_RGB2GRAY);
 	}
 
 	CvMemStorage *storage = cvCreateMemStorage(0);
@@ -54,7 +54,7 @@ int filterByVolume(IplImage *src, IplImage *dst, long minVolume) {
 	recursiveContoursDraw(tmp3d, contours, minVolume, 0);
 
 	cvReleaseMemStorage(&storage);
-	cvCvtColor(tmp3d, dst, CV_BGR2GRAY);
+	cvCvtColor(tmp3d, dst, CV_RGB2GRAY);
 	cvReleaseImage(&tmp3d);
 
 	return 0;

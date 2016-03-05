@@ -13,7 +13,7 @@ int findFaces(CvArr* src, CvRect **rects, double scale, double *t) {
 		tmp1d = cvCloneImage((IplImage *)src);
 	} else {
 		tmp1d = cvCreateImage(cvGetSize(src), ((IplImage *)src)->depth, 1);
-		cvCvtColor(src, tmp1d, CV_BGR2GRAY);
+		cvCvtColor(src, tmp1d, CV_RGB2GRAY);
 	}
 
 	// Scale down image
@@ -82,7 +82,7 @@ void doFaces(IplImage *src, IplImage *dst, double scale) {
 		tmp1d = cvCloneImage(src);
 	} else {
 		tmp1d = cvCreateImage(cvGetSize(src), src->depth, 1);
-		cvCvtColor(src, tmp1d, CV_BGR2GRAY);
+		cvCvtColor(src, tmp1d, CV_RGB2GRAY);
 	}
 
 	// Scale down image

@@ -21,7 +21,6 @@ void cvCopy2(CvArr *src, CvArr *dst, CvArr *mask) {
 void cvCopyNonZero(CvArr *src, CvArr *dst, CvArr *mask) {
 	IplImage *tmp1d = cvCreateImage(cvGetSize(src), ((IplImage *)src)->depth, 1);
 	cvCvtColor(src, tmp1d, CV_RGB2GRAY);
-	cvCvtColor(src, src, CV_RGB2BGR);
 	cvCopy(src, dst, tmp1d);
 	cvReleaseImage(&tmp1d);
 }

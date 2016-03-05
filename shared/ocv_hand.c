@@ -18,7 +18,7 @@ void ocvCreateHandIconWithHand(IplImage *layer, IplImage *sprite, ocvHand myHand
 
 	{
 		IplImage *tmp1d = cvCreateImage(cvGetSize(sprite), sprite->depth, 1);
-		cvCvtColor(sprite, tmp1d, CV_BGR2GRAY);
+		cvCvtColor(sprite, tmp1d, CV_RGB2GRAY);
 		cvNot(tmp1d, tmp1d);
 		cvMerge(tmp1d, tmp1d, tmp1d, NULL, sprite);
 		cvThreshold(tmp1d, tmp1d, 2, 255, CV_THRESH_BINARY);
@@ -62,7 +62,7 @@ void ocvPrefilterImageMask(CvArr *src, IplImage *dst, int grayscaleDistance, CvS
 		IplImage *white = cvCloneImage(tmp1dc); cvSet(white, cvScalarAll(255), NULL);
 		IplImage *tmp3d = cvCreateImage(cvGetSize(dst), dst->depth, 3);
 		cvMerge(tmp1dg, white, tmp1dc, NULL, tmp3d);
-		cvCvtColor(tmp3d, white, CV_BGR2GRAY);
+		cvCvtColor(tmp3d, white, CV_RGB2GRAY);
 		cvThreshold(white, white, 240, 255, CV_THRESH_BINARY);
 		cvReleaseImage(&tmp3d);
 
@@ -465,14 +465,12 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 			cvCopy2(iplImage, tmp3d, tmp1d);
 		}
 		if (0&&[options[@"inputType"] isEqualToString:@"image"]) {
-			cvCvtColor(tmp3d, tmp1d, CV_BGR2GRAY);
+			cvCvtColor(tmp3d, tmp1d, CV_RGB2GRAY);
 			cvMerge(tmp1d, tmp1d, tmp1d, NULL, tmp3d);
 		}
 
 		//goto end;
 	#endif
-
-	cvCvtColor(tmp3d, tmp3d, CV_RGB2BGR);
 
 	CvScalar minScalar = cvScalar(160, 30, 50, 0);
 	CvScalar maxScalar = cvScalar(30, 255, 255, 255);
@@ -488,7 +486,6 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 			NSLog2("copy mask");
 			cvMerge(tmp1d, tmp1d, tmp1d, NULL, tmp3d);
 		}
-		cvCvtColor(tmp3d, tmp3d, CV_BGR2RGB);
 	} else { // Show original
 		NSLog2("use original");
 		cvCopy(src, tmp3d,  NULL);

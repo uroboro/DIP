@@ -106,7 +106,7 @@ void goodCorners(IplImage *src, IplImage *dst, size_t n) {
 		tmp1d = cvCloneImage(src);
 	} else {
 		tmp1d = cvCreateImage(cvGetSize(src), src->depth, 1);
-		cvCvtColor(src, tmp1d, CV_BGR2GRAY);
+		cvCvtColor(src, tmp1d, CV_RGB2GRAY);
 	}
 	int corner_count = 20;
 	CvPoint2D32f* corners = (CvPoint2D32f *)calloc(corner_count, sizeof(CvPoint2D32f));
@@ -170,7 +170,7 @@ char operateImage(Userdata *userdata) {
 
 
 	IplImage *cannyMask = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 1);
-	cvCvtColor(tmp3d, cannyMask, CV_BGR2GRAY);
+	cvCvtColor(tmp3d, cannyMask, CV_RGB2GRAY);
 	cvSmooth(cannyMask, cannyMask, CV_GAUSSIAN, 5, 0, 0, 0);
 	unsigned int lThreshold = 50;
 	unsigned int hThreshold = 200;
@@ -207,7 +207,7 @@ char operateImage(Userdata *userdata) {
 #if USE_SUBIMAGE && USE_HISTOGRAM
 	//face histogram
 	IplImage *subimage2 = cvCloneImage(subimage);
-	cvCvtColor(subimage2, subimage2, CV_BGR2HSV);
+	cvCvtColor(subimage2, subimage2, CV_RGB2HSV);
 	size_t binsCount = 0;
 	size_t *bins = NULL;
 	//printf("%d (%p)", binsCount, &bins);
@@ -248,7 +248,7 @@ char operateImage(Userdata *userdata) {
 
 	filterByHSV(subimage2, cvScalar(minH, minS, minV, 0), cvScalar(maxH, maxS, maxV, 0), subimage2);
 	filterByHSV(subimage2, minScalar, maxScalar, subimage2);
-	cvCvtColor(subimage2, subimage2, CV_HSV2BGR);
+	cvCvtColor(subimage2, subimage2, CV_HSV2RGB);
 
 	cvNamedWindow(CONTROL_WINDOW "41", 0);
 	cvResizeWindow(CONTROL_WINDOW "41", subimage2->width, subimage2->height);

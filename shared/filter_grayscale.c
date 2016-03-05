@@ -4,7 +4,7 @@ int maskByDistance2Grayscale(IplImage *src, IplImage *dst, int minDistance) {
 	IplImage *tmp3d = cvCreateImage(cvGetSize(src), src->depth, 3);
 	ocvDistance2Grayscale(src, tmp3d);
 	cvThreshold(tmp3d, tmp3d, minDistance, 255, CV_THRESH_BINARY);
-	cvCvtColor(tmp3d, dst, CV_BGR2GRAY);
+	cvCvtColor(tmp3d, dst, CV_RGB2GRAY);
 	cvReleaseImage(&tmp3d);
 	return 0;
 }
