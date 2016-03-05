@@ -67,7 +67,7 @@
 		    return b;\
 		}
 	#else
-		#define TRY_ONCE(block)
+		#define TRY_ONCE(block) block
 	#endif
 #endif
 
