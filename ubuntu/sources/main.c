@@ -56,9 +56,11 @@ int main(int argc, char *argv[], char *envp[]) {
 		ocv_handAnalysis(input, output);
 
 		cvResizeWindow(INPUT_WINDOW, cam_width / 2, cam_height / 2);
+		cvCvtColor(input, input, CV_RGB2BGR);
 		cvShowImage(INPUT_WINDOW, input);
 
 		cvResizeWindow(OUTPUT_WINDOW, cam_width / 2, cam_height / 2);
+		cvCvtColor(output, output, CV_RGB2BGR);
 		cvShowImage(OUTPUT_WINDOW, output);
 	}
 
