@@ -6,7 +6,8 @@
 #define OUTPUT_WINDOW	"Output Window"
 
 IplImage *ocv_handSpriteCreate(char *path) {
-	return cvLoadImage(path, CV_LOAD_IMAGE_GRAYSCALE);
+	char buf[256]; sprintf(buf, "Resources/%s", path);
+	return cvLoadImage(buf, CV_LOAD_IMAGE_COLOR);
 }
 
 int main(int argc, char *argv[], char *envp[]) {
