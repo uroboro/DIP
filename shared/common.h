@@ -56,16 +56,13 @@
 	#define DO_ONCE(block) { static int once ## __LINE__ = 1; if (once ## __LINE__) { once ## __LINE__ = 0; ({block}); } }
 
 	#ifdef __cplusplus
-		#define TRY_ONCE(block) {\
-		    int b = 1;\
-		    try { block; }\
-		    catch (cv::Exception& e) {\
-		        const char* err_msg = e.what();\
-		        UIAlert(@"OpenCV exception caught", [@"The following error has been copied to the clipboard:\n" stringByAppendingString:@(err_msg)]);\
-		        b = 0;\
-		    }\
-		    return b;\
-		}
+		#define TRY_ONCE(block) { static int tryAgain ## __LINE__ = 1; if (tryAgain ## __LINE__) { tryAgain ## __LINE__ =\
+				({ int b = 1; try { block; }\
+				catch (cv::Exception& e) {\
+					const char* err_msg = e.what(); char buf[1024]; (buf, "OpenCV exception caught: %s", err_msg); present(0, buf); b = 0;\
+				};\
+				b; });\
+			} }
 	#else
 		#define TRY_ONCE(block) block
 	#endif
@@ -82,6 +79,7 @@
 		objc_msgSend(a, sel_registerName("release"));\
 	})
 #else
+	#include "messages.h"
 	#define UIAlert(t, m)
 	#define NSLog(...)
 #endif
