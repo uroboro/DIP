@@ -3,42 +3,48 @@
 
 #include "common.h"
 
-DIP_EXTERN CvScalar cvScalarRGBFromHSV(CvScalar hsv);
+DIP_EXTERN_BEGIN
 
-DIP_EXTERN void drawBadge(CvArr *img, char *string, CvScalar fontColor, double fontSize, CvPoint badgeCenter, CvScalar badgeColor);
+CvScalar cvScalarRGBFromHSV(CvScalar hsv);
+
+void drawBadge(CvArr *img, char *string, CvScalar fontColor, double fontSize, CvPoint badgeCenter, CvScalar badgeColor);
+
+DIP_EXTERN_END
 
 #include "click.h"
 
-DIP_EXTERN char PointInRect(CvPoint point, CvSize size);
+DIP_EXTERN_BEGIN
 
+char PointInRect(CvPoint point, CvSize size);
 
-
-DIP_EXTERN typedef struct _circle {
+typedef struct _circle {
 	CvPoint center;
 	int radius;
 	CvScalar color;
 	int thickness;
 } Circle;
 
-DIP_EXTERN Circle makeCircle(CvPoint center, int radius, CvScalar color, int thickness);
-DIP_EXTERN Circle makeCircleFromDrag(Drag drag, CvScalar color, int thickness);
-DIP_EXTERN int printCircle(Circle circle);
+Circle makeCircle(CvPoint center, int radius, CvScalar color, int thickness);
+Circle makeCircleFromDrag(Drag drag, CvScalar color, int thickness);
+int printCircle(Circle circle);
 
-DIP_EXTERN void drawCircle(CvArr *img, Circle circle);
+void drawCircle(CvArr *img, Circle circle);
 
 
 
-DIP_EXTERN typedef struct _square {
+typedef struct _square {
 	CvPoint origin;
 	CvSize size;
 	CvScalar color;
 	int thickness;
 } Square;
 
-DIP_EXTERN Square makeSquare(CvPoint origin, CvSize size, CvScalar color, int thickness);
-DIP_EXTERN Square makeSquareFromDrag(Drag drag, CvScalar color, int thickness);
-DIP_EXTERN int printSquare(Square square);
+Square makeSquare(CvPoint origin, CvSize size, CvScalar color, int thickness);
+Square makeSquareFromDrag(Drag drag, CvScalar color, int thickness);
+int printSquare(Square square);
 
-DIP_EXTERN void drawSquare(CvArr *img, Square square);
+void drawSquare(CvArr *img, Square square);
+
+DIP_EXTERN_END
 
 #endif /* DRAWING_H */
