@@ -20,55 +20,58 @@
 - (id)initWithView:(UIView *)view {
 	if ((self = [self init])) {
 		_view = view;
+		#if PREVIEW_LAYER
+		_previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:_camera.session];
+		_previewLayer.frame = _view.bounds;
+		[_view.layer addSublayer:_previewLayer];
+		#endif
 	}
 
 	return self;
 }
 
 - (void)dealloc {
-	[_image release];
-
 	[super dealloc];
 }
 
 - (void)getCGImage:(CGImageRef)imageRef {
 	if (!imageRef) { return; }
 
-	CGImageRef imageRef2 = operateImageRefCreate(imageRef, _options);
-	UIImage *image = [[UIImage alloc] initWithCGImage:imageRef2];
-	CGImageRelease(imageRef2);
+	#define SCALE 0
+	#if SCALE
+		float floatingValue = options[@"floatingValue"] ? ((NSNumber *)options[@"floatingValue"]).floatValue : 1;
+		NSLog2(([NSString stringWithFormat:@"floatingValue %@", options[@"floatingValue"]]).UTF8String);
+		// Scale down input image
+		if (floatingValue < 1) { CGImageRef tmp = CGImageCreateScaled(imageRef, floatingValue); if (tmp) { imageRef = tmp; } }
+	#endif
 
-	[self setViewImage:image];
+	CGImageRef imageRefOut = operateImageRefCreate(imageRef);
+	if (!imageRefOut) { present(DBGOutputModeSyslog|0, "no imageRefOut"); return; }
+
+	#if SCALE
+		// Scale up output image
+		if (floatingValue < 1) { CGImageRef tmp = CGImageCreateScaled(imageRefOut, 1/floatingValue); if (tmp) { CGImageRelease(imageRefOut); imageRefOut = tmp; } }
+	#endif
+
+	UIImage *image = [[UIImage alloc] initWithCGImage:imageRefOut];
+	CGImageRelease(imageRefOut);
+
+	CGRect availableRect = UtilsAvailableScreenRect();
+	CGFloat k = (CGFloat)CGImageGetHeight(imageRefOut) / CGImageGetWidth(imageRefOut);
+	_view.frame = CGRectMake(_view.frame.origin.x, _view.frame.origin.y, availableRect.size.width, floor(k * availableRect.size.width));
+
+	dispatch_async(dispatch_get_main_queue(), ^{
+		if ([_view isKindOfClass:[UIImageView class]]) {
+			UIImageView *iv = (UIImageView *)_view;
+			[iv setImage:image];
+		}
+	});
+
+	[image release];
 
 	if (_options[@"fps"]) {
 		[self setFPS:((NSNumber *)_options[@"fps"]).intValue];
 	}
-
-	[image release];
-}
-
-- (void)setViewImage:(UIImage *)image {
-	if (!image) { return; }
-
-	dispatch_async(dispatch_get_main_queue(), ^{
-		UIImage *img = [[UIImage alloc] initWithCGImage:image.CGImage];
-
-		CGRect availableRect = UtilsAvailableScreenRect();
-		CGFloat k = img.size.height / img.size.width;
-		CGRect f = _view.frame;
-		_view.frame = CGRectMake(f.origin.x, f.origin.y, availableRect.size.width, floor(k * availableRect.size.width));
-
-		if ([_view isKindOfClass:[UIImageView class]]) {
-			UIImageView *iv = (UIImageView *)_view;
-			[iv setImage:img];
-		}
-		if ([_view isKindOfClass:[UIButton class]]) {
-			UIButton *bv = (UIButton *)_view;
-			[bv setBackgroundImage:img forState:UIControlStateNormal];
-		}
-
-		[img release];
-	});
 }
 
 #pragma mark - Camera controls

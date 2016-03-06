@@ -8,11 +8,11 @@
 @property (nonatomic, assign) UIView *view;
 - (id)initWithView:(UIView *)view;
 
-@property (nonatomic, retain) UIImage *image;
-
 @property (nonatomic, retain) NSMutableDictionary *options;
 
 @property (nonatomic, retain) AVCustomCapture *camera;
+@property (nonatomic, retain) AVCaptureVideoPreviewLayer *previewLayer;
+
 - (void)start;
 - (void)stop;
 - (void)swapCamera;

@@ -7,7 +7,7 @@
 
 DIP_EXTERN_BEGIN
 
-CGImageRef operateImageRefCreate(CGImageRef imageRef, NSMutableDictionary *options);
+CGImageRef operateImageRefCreate(CGImageRef imageRef);
 
 DIP_EXTERN_END
 
