@@ -68,6 +68,7 @@
 	#endif
 #endif
 
+#include "messages.h"
 #if DIP_MOBILE && __OBJC__
 	#import <objc/runtime.h>
 	#import <objc/message.h>
@@ -80,7 +81,6 @@
 	})
 	#define NSLog2(message) NSLog(@"XXX Reached line \e[31m%d\e[m, message: \e[32m%s\e[m", __LINE__, message);
 #else
-	#include "messages.h"
 	#define UIAlert(t, m)
 	#define NSLog(...)
 	#define NSLog2(message) present(0, "XXX Reached \e[33m%s\e[m \e[31m%d\e[m, message: \e[32m%s\e[m", __FILE__, __LINE__, message);
