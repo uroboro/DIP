@@ -508,6 +508,7 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 	int contourCount = 0; for (CvSeq* seq = contourSeq; seq != 0; seq = seq->h_next) contourCount++;
 	{ char buf[32]; sprintf(buf, "foreach contour (%d)", contourCount); NSLog2(buf); }
 #if 01
+	CvSeq* handsSeq = cvCreateSeq(CV_SEQ_ELTYPE_PTR , sizeof(CvSeq), sizeof(ocvHand), cvCreateMemStorage(0));
 	if (contourCount > 0) {
 		for (CvSeq* seq = contourSeq; seq != 0; seq = seq->h_next) {
 			IplImage *overlay = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 3);
@@ -520,36 +521,46 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 			ret = ocvAnalizeContour(seq, overlay, &myHand);
 			)
 
-	if (ret) {
-		CvFont font; double fontSize = 1; cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, fontSize, fontSize, 0, 2, 8);
-		char buf[32]; sprintf(buf, "maybe hand");
-		cvPutText(tmp3d, buf, cvPoint(10, 30), &font, CV_RGB(0, 255, 0));
-	} else {
-		CvFont font; double fontSize = 1; cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, fontSize, fontSize, 0, 2, 8);
-		char buf[32]; sprintf(buf, "no hand");
-		cvPutText(tmp3d, buf, cvPoint(10, 30), &font, CV_RGB(0, 255, 0));
-	}
-
 			// Copy overlay and text to output image
 			if (ret && (myHand.fingers > 2 && myHand.fingers < 6)) {
-				NSLog2("draw hand");
-				#if 0
-				ocvDrawHandInfo(overlay, myHand);
-				#else
-				char *handPaths[] = { "1456448219_icon_2_rock_n_roll.png", "1456448230_icon_3_high_five.png" };
-				IplImage *sprite = ocv_handSpriteCreate(handPaths[(myHand.fingers == 5)]);
-
-				ocvCreateHandIconWithHand(overlay, sprite, myHand);
-				cvReleaseImage(&sprite);
-				#endif
-				cvCopyNonZero(overlay, tmp3d, NULL);
+				cvSeqPush(handsSeq, &myHand);
 			} else {
 				cvDrawContours(red3d, seq, CV_RGB(0,0,255), CV_RGB(0,0,255), 0, CV_FILLED, 8, cvPoint(0, 0));
 			}
 			cvReleaseImage(&overlay);
 		}
 		cvReleaseMemStorage(&contourSeq->storage);
+
+		if (handsSeq->total) {
+			IplImage *overlay = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 3);
+			for (int i = 0; i < handsSeq->total; i++) {
+				ocvHand *myHand = CV_GET_SEQ_ELEM(ocvHand, handsSeq, i);
+				NSLog2("draw hand");
+				#if 0
+				ocvDrawHandInfo(overlay, myHand);
+				#else
+				char *handPaths[] = { "1456448219_icon_2_rock_n_roll.png", "1456448230_icon_3_high_five.png" };
+				IplImage *sprite = ocv_handSpriteCreate(handPaths[(myHand->fingers == 5)]);
+
+				ocvCreateHandIconWithHand(overlay, sprite, *myHand);
+				cvReleaseImage(&sprite);
+				#endif
+				cvCopyNonZero(overlay, tmp3d, NULL);
+			}
+			cvReleaseImage(&overlay);
+
+			CvFont font; double fontSize = 1; cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, fontSize, fontSize, 0, 2, 8);
+			char buf[32]; sprintf(buf, "maybe %d hands", handsSeq->total);
+			cvPutText(tmp3d, buf, cvPoint(10, 30), &font, CV_RGB(0, 255, 0));
+		} else {
+			CvFont font; double fontSize = 1; cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, fontSize, fontSize, 0, 2, 8);
+			char buf[32]; sprintf(buf, "no hands");
+			cvPutText(tmp3d, buf, cvPoint(10, 30), &font, CV_RGB(0, 255, 0));
+		}
+
 	}
+	cvReleaseMemStorage(&handsSeq->storage);
+
 #endif
 	goto end;
 	end:;
