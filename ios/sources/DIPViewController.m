@@ -21,6 +21,7 @@ UIKIT_EXTERN NSString *rvcName(void) {
 @property (nonatomic, retain) UIImageView *cameraView;
 
 @property (nonatomic, retain) UIImage *currentImage;
+@property (nonatomic, assign) dispatch_queue_t q;
 @property (nonatomic, retain) OCVImageOperator *imageOperatorImage;
 @property (nonatomic, retain) OCVImageOperator *imageOperatorVideo;
 
@@ -29,6 +30,13 @@ UIKIT_EXTERN NSString *rvcName(void) {
 @end
 
 @implementation DIPViewController
+
+- (id)init {
+	if ((self = [super init])) {
+		_q = dispatch_queue_create("com.uroboro.dip.image.process", DISPATCH_QUEUE_CONCURRENT);
+	}
+	return self;
+}
 
 - (void)loadView {
 	[super loadView];
@@ -79,7 +87,7 @@ UIKIT_EXTERN NSString *rvcName(void) {
 
 	_imageOperatorVideo = ({
 		OCVImageOperator *imageOperator = [[OCVImageOperator alloc] initWithView:_cameraView];
-		imageOperator.options = [@{@"inputType":@"video",@"fps":@(30),@"floatingValue":@(0.25)} mutableCopy];
+		imageOperator.options = [@{@"inputType":@"video",@"fps":@(5),@"floatingValue":@(0.25)} mutableCopy];
 		[imageOperator.camera swapCamera];
 		imageOperator;
 	});
@@ -199,12 +207,10 @@ UIKIT_EXTERN NSString *rvcName(void) {
 }
 
 - (void)processImage {
-	dispatch_queue_t q = dispatch_queue_create("com.uroboro.dip.image.process", DISPATCH_QUEUE_CONCURRENT);
-	dispatch_async(q, ^{
-		if (!_currentImage) { UIAlert(@"!_currentImage",nil); return; }
+	if (!_currentImage) { UIAlert(@"!_currentImage",nil); return; }
+	dispatch_async(_q, ^{
 		[_imageOperatorImage getCGImage:_currentImage.CGImage];
 	});
-	dispatch_release(q);
 }
 
 #pragma mark - Media input controller
