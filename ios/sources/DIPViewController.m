@@ -7,10 +7,26 @@
 #import "ImageUtils.h"
 
 #import "DIPViewController.h"
+#import "OCVImageOperator.h"
 
 UIKIT_EXTERN NSString *rvcName(void) {
 	return @"DIPViewController";
 }
+
+@interface DIPViewController ()
+
+@property (nonatomic, retain) UIScrollView *scrollView;
+@property (nonatomic, retain) UIButton *actionButton;
+@property (nonatomic, retain) UIImageView *stillShotView;
+@property (nonatomic, retain) UIImageView *cameraView;
+
+@property (nonatomic, retain) UIImage *currentImage;
+@property (nonatomic, retain) OCVImageOperator *imageOperatorImage;
+@property (nonatomic, retain) OCVImageOperator *imageOperatorVideo;
+
+@property (nonatomic, retain) NSMutableDictionary *options;
+
+@end
 
 @implementation DIPViewController
 
@@ -34,7 +50,7 @@ UIKIT_EXTERN NSString *rvcName(void) {
 		[button setFrame:availableRect];
 		[button setBackgroundColor:[UIColor darkGrayColor]];
 		[button addTarget:self action:@selector(actionButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
-		_currentImage = [self previousActionImage];
+		_currentImage = [self previousStillShotImage];
 		if (_currentImage) {
 			CGFloat k = floor(_currentImage.size.height / _currentImage.size.width * availableRect.size.width);
 			[button setBackgroundImage:_currentImage forState:UIControlStateNormal];
@@ -43,12 +59,10 @@ UIKIT_EXTERN NSString *rvcName(void) {
 		button;
 	})];
 
-	[_scrollView addSubview:_configButton = ({
-		UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
-		[button setFrame:CGRectOffset(availableRect, availableRect.size.width, 0)];
-		[button setBackgroundColor:[UIColor lightGrayColor]];
-		[button addTarget:self action:@selector(configButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
-		button;
+	[_scrollView addSubview:_stillShotView = ({
+		UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectOffset(availableRect, availableRect.size.width, 0)];
+		[imageView setBackgroundColor:[UIColor lightGrayColor]];
+		imageView;
 	})];
 
 	[_scrollView addSubview:_cameraView = ({
@@ -58,7 +72,7 @@ UIKIT_EXTERN NSString *rvcName(void) {
 	})];
 
 	_imageOperatorImage = ({
-		OCVImageOperator *imageOperator = [[OCVImageOperator alloc] initWithView:_configButton];
+		OCVImageOperator *imageOperator = [[OCVImageOperator alloc] initWithView:_stillShotView];
 		imageOperator.options = [@{@"inputType":@"image",@"floatingValue":@(1)} mutableCopy];
 		imageOperator;
 	});
@@ -89,8 +103,8 @@ UIKIT_EXTERN NSString *rvcName(void) {
 	[_actionButton release];
 	_actionButton = nil;
 
-	[_configButton release];
-	_configButton = nil;
+	[_stillShotView release];
+	_stillShotView = nil;
 
 	[_currentImage release];
 	_currentImage = nil;
@@ -144,9 +158,6 @@ UIKIT_EXTERN NSString *rvcName(void) {
 - (void)actionButtonPressed:(id)sender {
 	[self captureImage];
 }
-- (void)configButtonPressed:(id)sender {
-	[self executeConfig];
-}
 - (void)swapButtonPressed:(id)sender {
 	[self swapCamera];
 }
@@ -168,21 +179,7 @@ UIKIT_EXTERN NSString *rvcName(void) {
 	[self startCameraControllerFromViewController:self usingDelegate:self];
 }
 
-- (void)executeConfig {
-	#if 0
-	static int operation = 4;
-	operation %= 14;
-	operation++;
-
-	_options[@"operation"] = @(operation);
-//UIAlert(@"_options", _options.description);
-	_imageOperatorVideo.options = _options;
-	_imageOperatorImage.options = _options;
-	#endif
-	[self processImage];
-}
-
-- (UIImage *)previousActionImage {
+- (UIImage *)previousStillShotImage {
 	return [UIImage imageWithContentsOfFile:UtilsDocumentPathWithName(@"Photo.png")];
 }
 
@@ -204,18 +201,8 @@ UIKIT_EXTERN NSString *rvcName(void) {
 - (void)processImage {
 	dispatch_queue_t q = dispatch_queue_create("com.uroboro.dip.image.process", DISPATCH_QUEUE_CONCURRENT);
 	dispatch_async(q, ^{
-		dispatch_async(dispatch_get_main_queue(), ^{
-			[_configButton setTitle:@"PROCESSING" forState:UIControlStateNormal];
-		});
-
 		if (!_currentImage) { UIAlert(@"!_currentImage",nil); return; }
-
 		[_imageOperatorImage getCGImage:_currentImage.CGImage];
-
-		// UIKIT happens in the main thread/queue
-		dispatch_async(dispatch_get_main_queue(), ^{
-			[_configButton setTitle:nil forState:UIControlStateNormal];
-		});
 	});
 	dispatch_release(q);
 }
