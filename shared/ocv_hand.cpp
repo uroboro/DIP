@@ -71,7 +71,20 @@ void ocvPrefilterImageMask(IplImage *src, IplImage *dst, int grayscaleDistance, 
 		cvClose(white, white, NULL, 3);
 		cvSmooth(white, white, CV_GAUSSIAN, 9, 0, 0, 0);
 		cvThreshold(white, white, 127, 255, CV_THRESH_BINARY);
-		filterByVolume(white, white, white->width * white->height / 200);
+		// Draw external contours without internal blobs
+		{
+			CvSeq *contours = NULL;
+			cvFindContours2(white, cvCreateMemStorage(0), &contours, sizeof(CvContour), CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE, cvPoint(0, 0));
+			int contourCount = 0; for (CvSeq* seq = contours; seq != 0; seq = seq->h_next) contourCount++;
+			{ char buf[32]; sprintf(buf, "%d contours to draw", contourCount); NSLog2(buf); }
+			cvSet(white, cvScalarAll(0), NULL);
+			if (contourCount > 0) {
+				for (CvSeq* seq = contours; seq != 0; seq = seq->h_next) {
+					cvDrawContours(white, seq, cvScalarAll(255), cvScalarAll(0), 0, CV_FILLED, 8, cvPoint(0, 0));
+				}
+			}
+			if (contours && contours->storage) cvReleaseMemStorage(&contours->storage);
+		}
 
 		//cvMerge(white, white, white, NULL, dst);
 		cvCopy(white, dst, NULL);
@@ -438,6 +451,9 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 
 	IplImage *red3d = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 3);
 
+	CvSeq* handsSeq = cvCreateSeq(CV_SEQ_ELTYPE_PTR , sizeof(CvSeq), sizeof(ocvHand), cvCreateMemStorage(0));
+	CvSeq *contourSeq = NULL;
+	int contourCount = 0;
 	// Background subtraction
 	#if 0
 		static IplImage *background = NULL;
@@ -502,13 +518,11 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 	}
 	//goto end;
 	NSLog2("get contours");
-	CvSeq *contourSeq = NULL;
 	cvFindContours2(tmp1d, cvCreateMemStorage(0), &contourSeq, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_NONE, cvPoint(0, 0));
 	// Iterate over each contour
-	int contourCount = 0; for (CvSeq* seq = contourSeq; seq != 0; seq = seq->h_next) contourCount++;
+	for (CvSeq* seq = contourSeq; seq != 0; seq = seq->h_next) contourCount++;
 	{ char buf[32]; sprintf(buf, "foreach contour (%d)", contourCount); NSLog2(buf); }
 #if 01
-	CvSeq* handsSeq = cvCreateSeq(CV_SEQ_ELTYPE_PTR , sizeof(CvSeq), sizeof(ocvHand), cvCreateMemStorage(0));
 	if (contourCount > 0) {
 		for (CvSeq* seq = contourSeq; seq != 0; seq = seq->h_next) {
 			IplImage *overlay = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 3);
@@ -525,7 +539,7 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 			if (ret && (myHand.fingers > 2 && myHand.fingers < 6)) {
 				cvSeqPush(handsSeq, &myHand);
 			} else {
-				cvDrawContours(red3d, seq, CV_RGB(0,0,255), CV_RGB(0,0,255), 0, CV_FILLED, 8, cvPoint(0, 0));
+				cvDrawContours(red3d, seq, CV_RGB(0,255,0), CV_RGB(0,255,0), 0, CV_FILLED, 8, cvPoint(0, 0));
 			}
 			cvReleaseImage(&overlay);
 		}
