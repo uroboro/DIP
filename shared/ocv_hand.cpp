@@ -83,7 +83,7 @@ void ocvPrefilterImageMask(IplImage *src, IplImage *dst, int grayscaleDistance, 
 					cvDrawContours(white, seq, cvScalarAll(255), cvScalarAll(0), 0, CV_FILLED, 8, cvPoint(0, 0));
 				}
 			}
-			if (contours && contours->storage) cvReleaseMemStorage(&contours->storage);
+			cvReleaseMemStorage2(contours);
 		}
 
 		//cvMerge(white, white, white, NULL, dst);
@@ -141,7 +141,7 @@ void ocvPrefilterImageMask(IplImage *src, IplImage *dst, int grayscaleDistance, 
 				}
 			}
 			//cvClearMemStorage(contourSeq->storage);
-			cvReleaseMemStorage(&contourSeq->storage);
+			cvReleaseMemStorage2(contourSeq);
 	#endif
 
 	goto end;
@@ -173,7 +173,7 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand) {
 				cvSeqPush(defectsSeq, defect);
 			}
 		}
-		cvReleaseMemStorage(&defects->storage);
+		cvReleaseMemStorage2(defects);
 		defects = defectsSeq;
 	}
 
@@ -186,7 +186,7 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand) {
 		CvPoint fingerTip = cvPointMidPoint(*defect->start, *prevDefect->end);
 		cvSeqPush(fingerTipSeq, &fingerTip);
 	}
-	cvReleaseMemStorage(&defects->storage);
+	cvReleaseMemStorage2(defects);
 
 	// Only convex contours are valid
 	// Work with 3 to 6 deep defects
@@ -258,7 +258,7 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand) {
 				}
 				if (safeCount < 0) {
 					char buf[32]; sprintf(buf, "circle rotate loop protection failed"); NSLog2(buf);
-					cvReleaseMemStorage(&circleContours->storage);
+					cvReleaseMemStorage2(circleContours);
 					goto cleanUp;
 				}
 			}
@@ -298,7 +298,7 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand) {
 
 				previousValue = value;
 			}
-			cvReleaseMemStorage(&circleContours->storage);
+			cvReleaseMemStorage2(circleContours);
 
 			// Rotate line segments so longest is at first index
 			while (maxCounterIndex--) {
@@ -389,7 +389,7 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand) {
 				drawBadge(overlay, buf, CV_RGB(200, 200, 200), .5, lineCenter, cvScalarRGBFromHSV(cvScalar(angle, 255, 127, 0)));
 			}
 		#endif
-		cvReleaseMemStorage(&segmentsSeq->storage);
+		cvReleaseMemStorage2(segmentsSeq);
 
 		// Print finger tips
 		#if 0
@@ -408,8 +408,8 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand) {
 	NSLog2("cleanUp");
 	// Clean up
 
-	cvReleaseMemStorage(&fingerTipSeq->storage);
-	cvReleaseMemStorage(&pointSeq->storage);
+	cvReleaseMemStorage2(fingerTipSeq);
+	cvReleaseMemStorage2(pointSeq);
 
 	cvReleaseImage(&canvas);
 
@@ -543,7 +543,7 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 			}
 			cvReleaseImage(&overlay);
 		}
-		cvReleaseMemStorage(&contourSeq->storage);
+		cvReleaseMemStorage2(contourSeq);
 
 		if (handsSeq->total) {
 			IplImage *overlay = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 3);
@@ -573,7 +573,7 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 		}
 
 	}
-	cvReleaseMemStorage(&handsSeq->storage);
+	cvReleaseMemStorage2(handsSeq);
 
 #endif
 	goto end;

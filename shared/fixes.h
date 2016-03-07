@@ -3,6 +3,8 @@
 
 #include "common.h"
 
+#define cvReleaseMemStorage2(sequence) if (sequence && sequence->storage) { cvReleaseMemStorage(&sequence->storage); }
+
 DIP_EXTERN void cvCopy2(CvArr *src, CvArr *dst, CvArr *mask);
 
 DIP_EXTERN void cvCopyNonZero(CvArr *src, CvArr *dst, CvArr *mask);
