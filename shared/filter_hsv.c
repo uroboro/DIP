@@ -33,6 +33,9 @@ DIP_EXTERN int maskByHSV(IplImage *src, IplImage *dst, CvScalar minHSV, CvScalar
 	IplImage *tmp3d = cvCreateImage(cvGetSize(src), src->depth, 3);
 	cvMerge(tmp1dH_mask, tmp1dS_mask, tmp1dV_mask, NULL, tmp3d);
 	cvCvtColor(tmp3d, dst, CV_RGB2GRAY);
+	//cvSmooth(dst, dst, CV_GAUSSIAN, 9, 0, 0, 0);
+	//cvSmooth(dst, dst, CV_MEDIAN, 3, 0, 0, 0);
+	//CVSHOW("skin2", dst->width*6/5, dst->height*2/3, dst->width/2, dst->height/2, dst);
 	cvThreshold(dst, dst, 240, 255, CV_THRESH_BINARY);
 	cvReleaseImage(&tmp3d);
 
