@@ -51,13 +51,13 @@ void ocvPrefilterImageMask(IplImage *src, IplImage *dst, int grayscaleDistance, 
 	{ // Distance from grayscale and threshold
 		NSLog2("grayscale");
 		maskByDistance2Grayscale(src, tmp1dg, grayscaleDistance);
-		CVSHOW("grayscale", tmp1dg->width/2, 0, tmp1dg->width/2, tmp1dg->height/2, tmp1dg);
+		CVSHOW("grayscale", tmp1dg->width*2/3, 0, tmp1dg->width/2, tmp1dg->height/2, tmp1dg);
 	}
 
 	{ // Filter out non skin tones
 		NSLog2("skin");
 		maskByHSV(src, tmp1dc, minScalar, maxScalar);
-		CVSHOW("skin", tmp1dc->width/2, 0, tmp1dc->width/2, tmp1dc->height/2, tmp1dc);
+		CVSHOW("skin", tmp1dc->width*6/5, 0, tmp1dc->width/2, tmp1dc->height/2, tmp1dc);
 	}
 
 	{
@@ -78,10 +78,39 @@ void ocvPrefilterImageMask(IplImage *src, IplImage *dst, int grayscaleDistance, 
 			int contourCount = 0; for (CvSeq* seq = contours; seq != 0; seq = seq->h_next) contourCount++;
 			{ char buf[32]; sprintf(buf, "%d contours to draw", contourCount); NSLog2(buf); }
 			cvSet(white, cvScalarAll(0), NULL);
+			#define DIP_MINIMUM_AREA2IMAGE_RATIO 0.02
+			double imageArea = white->width * white->height;
 			if (contourCount > 0) {
+				//IplImage *asdfg = cvCloneImage(src); cvSet(asdfg, cvScalarAll(0), NULL);
 				for (CvSeq* seq = contours; seq != 0; seq = seq->h_next) {
-					cvDrawContours(white, seq, cvScalarAll(255), cvScalarAll(0), 0, CV_FILLED, 8, cvPoint(0, 0));
+					double area = cvContourArea(seq, CV_WHOLE_SEQ, 0);
+					{ char buf[32]; sprintf(buf, "contour with area of size %.f", area); NSLog2(buf); }
+					double hullArea = cvContourArea(cvConvexHull2(seq, NULL, CV_CLOCKWISE, 1), CV_WHOLE_SEQ, 0);
+					double ratio = area / imageArea;
+					CvScalar color = ratio < DIP_MINIMUM_AREA2IMAGE_RATIO ? CV_RGB(0, 0, 0) : CV_RGB(255, 255, 255); //cvScalarRGBFromHSV(cvScalar(200*ratio, 255, 128, 255));
+					cvDrawContours(white, seq, color, cvScalarAll(0), 0, CV_FILLED, 8, cvPoint(0, 0));
+					CVSHOW("sizes", white->width*6/5, white->height*2/3, white->width/2, white->height/2, white);
+					//cvDrawContours(white, seq, cvScalarAll(255), cvScalarAll(0), 0, CV_FILLED, 8, cvPoint(0, 0));
+
+					// Ignore contours with a ratio of w:h or h:w greater than OCV_OBJECT_WIDTH_HEIGHT_RATIO
+					#if 0
+						{
+							CvBox2D box = cvMinAreaRect2(seq, NULL);
+							double seqRatio = box.size.width / box.size.height;
+
+							double seqArea = cvContourArea(seq, CV_WHOLE_SEQ, 0);
+							double screenArea = tmp1d->width * tmp1d->height;
+							if (seqRatio > OCV_OBJECT_WIDTH_HEIGHT_RATIO || seqRatio < 1 / OCV_OBJECT_WIDTH_HEIGHT_RATIO || seqArea < 0.1 * screenArea) {
+								//cvBox2(tmp1d, box, cvScalarAll(255), CV_FILLED, 8, 0);
+								//cvEllipseBox(tmp1d, box, cvScalarAll(255), CV_FILLED, 8, 0);
+								cvDrawContours(tmp1d, seq, cvScalarAll(0), cvScalarAll(0), 0, CV_FILLED, 8, cvPoint(0, 0));
+							} else {
+								cvDrawContours(tmp1d, seq, cvScalarAll(255), cvScalarAll(255), 0, CV_FILLED, 8, cvPoint(0, 0));
+							}
+						}
+					#endif
 				}
+				//cvReleaseImage(&asdfg);
 			}
 			cvReleaseMemStorage2(contours);
 		}
@@ -89,7 +118,7 @@ void ocvPrefilterImageMask(IplImage *src, IplImage *dst, int grayscaleDistance, 
 		//cvMerge(white, white, white, NULL, dst);
 		cvCopy(white, dst, NULL);
 		cvReleaseImage(&white);
-		goto end;
+		//goto end;
 	}
 
 	// Stabilize output
@@ -108,40 +137,6 @@ void ocvPrefilterImageMask(IplImage *src, IplImage *dst, int grayscaleDistance, 
 		)
 		cvThreshold(tmp1d, tmp1d, 200, 255, CV_THRESH_BINARY);
 		}
-	#endif
-
-	// Analise each contour
-	#if 0
-		NSLog2("contour topology");
-			CvSeq *contourSeq = NULL;
-			cvFindContours(tmp1d, cvCreateMemStorage(0), &contourSeq, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_NONE, cvPoint(0, 0));
-			for (CvSeq* seq = contourSeq; seq != 0; seq = seq->h_next) {
-				// Ignore contours larger than half the screen
-				//double area = cvContourArea(seq, CV_WHOLE_SEQ, 0);
-				//if (area * 2 > tmp3d->width * tmp3d->height) continue;
-
-				// Convex hull to contour area ratio
-				//CvSeq *hull = cvConvexHull2(seq, NULL, CV_CLOCKWISE, 1);
-				//double hullarea = cvContourArea(hull, CV_WHOLE_SEQ, 0);
-				//double ratio = area / hullarea;
-				//CvScalar color_fg = CV_RGB(sin(ratio + 0) * 127 + 128, sin(ratio + 2) * 127 + 128, (ratio + 4) * 127 + 128);
-
-				// Ignore contours with a ratio of w:h or h:w greater than OCV_OBJECT_WIDTH_HEIGHT_RATIO
-				CvBox2D box = cvMinAreaRect2(seq, NULL);
-				double seqRatio = box.size.width / box.size.height;
-
-				double seqArea = cvContourArea(seq, CV_WHOLE_SEQ, 0);
-				double screenArea = tmp1d->width * tmp1d->height;
-				if (seqRatio > OCV_OBJECT_WIDTH_HEIGHT_RATIO || seqRatio < 1 / OCV_OBJECT_WIDTH_HEIGHT_RATIO || seqArea < 0.1 * screenArea) {
-					//cvBox2(tmp1d, box, cvScalarAll(255), CV_FILLED, 8, 0);
-					//cvEllipseBox(tmp1d, box, cvScalarAll(255), CV_FILLED, 8, 0);
-					cvDrawContours(tmp1d, seq, cvScalarAll(0), cvScalarAll(0), 0, CV_FILLED, 8, cvPoint(0, 0));
-				} else {
-					cvDrawContours(tmp1d, seq, cvScalarAll(255), cvScalarAll(255), 0, CV_FILLED, 8, cvPoint(0, 0));
-				}
-			}
-			//cvClearMemStorage(contourSeq->storage);
-			cvReleaseMemStorage2(contourSeq);
 	#endif
 
 	goto end;
@@ -224,6 +219,7 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand) {
 			}
 			sfRadius -= 2;
 			radius = (lnRadius + sfRadius) / 2;
+			{ char buf[32]; sprintf(buf, "radius: %.2f", radius); NSLog2(buf); }
 		}
 
 		NSLog2("segments");
@@ -248,16 +244,18 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand) {
 
 				NSLog2("circle rotate");
 				// Rotate sequence so that the first item contains a black pixel
-				int safeCount = circleContours->total;
+				int safeCount = 0; for (CvSeq* seq = circleContours; seq != 0; seq = seq->h_next) safeCount++;
 				CvPoint *point = CV_GET_SEQ_ELEM(CvPoint, circleContours, circleContours->total - 1);
+				{ char buf[32]; sprintf(buf, "circle rotate %d loops", safeCount); NSLog2(buf); }
 				while (cvGet2D(canvas, point->y, point->x).val[0] != 0 && safeCount-- > 0) {
-					char buf[32]; sprintf(buf, "circle rotate loop: %d", safeCount); NSLog2(buf);
+					{ char buf[32]; sprintf(buf, "circle rotate loop: %d", safeCount); NSLog2(buf); }
 					cvSeqPushFront(circleContours, point);
 					cvSeqPop(circleContours, NULL);
 					point = CV_GET_SEQ_ELEM(CvPoint, circleContours, circleContours->total - 1);
 				}
+				{ char buf[32]; sprintf(buf, "safety check with %d loops left", safeCount); NSLog2(buf); }
 				if (safeCount < 0) {
-					char buf[32]; sprintf(buf, "circle rotate loop protection failed"); NSLog2(buf);
+					NSLog2("circle rotate loop protection failed");
 					cvReleaseMemStorage2(circleContours);
 					goto cleanUp;
 				}
@@ -265,12 +263,15 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand) {
 
 			int maxCounterIndex = -1;
 			// Find longest line segment
+			int safeCount = 0; for (CvSeq* seq = circleContours; seq != 0; seq = seq->h_next) safeCount++;
 			ocvLine line;
-			CvPoint *lastPoint = CV_GET_SEQ_ELEM(CvPoint, circleContours, circleContours->total - 1);
+			CvPoint *lastPoint = CV_GET_SEQ_ELEM(CvPoint, circleContours, safeCount - 1);
 			char previousValue = (char)cvGet2D(canvas, lastPoint->y, lastPoint->x).val[0] != 0;
 			int counter = 0;
 			int maxCounter = -1;
-			for (int i = 0; i < circleContours->total; i++) {
+			{ char buf[32]; sprintf(buf, "find wrist with %d loops (%d)", safeCount,circleContours->total); NSLog2(buf); }
+			for (int i = 0; i < safeCount; i++) {
+				{ char buf[32]; sprintf(buf, "circle find loop: %d", i); NSLog2(buf); }
 				CvPoint *point = CV_GET_SEQ_ELEM(CvPoint, circleContours, i);
 				char value = (char)cvGet2D(canvas, point->y, point->x).val[0] != 0;
 
@@ -301,7 +302,8 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand) {
 			cvReleaseMemStorage2(circleContours);
 
 			// Rotate line segments so longest is at first index
-			while (maxCounterIndex--) {
+			{ char buf[32]; sprintf(buf, "maxCounterIndex: %d", maxCounterIndex); NSLog2(buf); }
+			while (maxCounterIndex != -1 && maxCounterIndex--) {
 				ocvLine *line = CV_GET_SEQ_ELEM(ocvLine, segmentsSeq, 0);
 				cvSeqPush(segmentsSeq, line);
 				cvSeqPopFront(segmentsSeq, NULL);
@@ -320,7 +322,8 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand) {
 			CvPoint wristPoint = cvPointMidPoint(line->start, line->end);
 			CvPoint *firstPoint = CV_GET_SEQ_ELEM(CvPoint, fingerTipSeq, 0);
 			int minDistance = cvPointDistance(wristPoint, *firstPoint);
-			int minDistanceIndex = 0;
+			int minDistanceIndex = -1;
+			{ char buf[32]; sprintf(buf, "fingerTipSeq->total: %d", fingerTipSeq->total); NSLog2(buf); }
 			for (int i = 0; i < fingerTipSeq->total; i++) {
 				CvPoint *point = CV_GET_SEQ_ELEM(CvPoint, fingerTipSeq, i);
 				int distance = cvPointDistance(wristPoint, *point);
@@ -331,7 +334,7 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand) {
 			}
 
 			// Rotate line segments so longest is at first index
-			while (minDistanceIndex--) {
+			while (minDistanceIndex != -1 && minDistanceIndex--) {
 				CvPoint *point = CV_GET_SEQ_ELEM(CvPoint, fingerTipSeq, 0);
 				cvSeqPush(fingerTipSeq, point);
 				cvSeqPopFront(fingerTipSeq, NULL);
@@ -379,7 +382,7 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand) {
 
 		// Print finger segments
 		#if 0
-		NSLog2("print finger segments");
+			NSLog2("print finger segments");
 			for (int i = 0; i < segmentsSeq->total; i++) {
 				ocvLine *line = CV_GET_SEQ_ELEM(ocvLine, segmentsSeq, i);
 				char buf[32];
@@ -393,7 +396,7 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand) {
 
 		// Print finger tips
 		#if 0
-		NSLog2("print finger tips");
+			NSLog2("print finger tips");
 			for (int i = 0; i < fingerTipSeq->total; i++) {
 				CvPoint *point = CV_GET_SEQ_ELEM(CvPoint, fingerTipSeq, i);
 				char buf[32];
@@ -509,7 +512,7 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 		NSLog2("use original");
 		cvCopy(src, tmp3d,  NULL);
 	}
-	//goto end;
+
 	{ // Add red alpha layer to show ignored areas
 		IplImage *red1d = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 1);
 		cvNot(tmp1d, red1d);
@@ -517,12 +520,12 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 		cvReleaseImage(&red1d);
 	}
 	//goto end;
+#if 01
 	NSLog2("get contours");
 	cvFindContours2(tmp1d, cvCreateMemStorage(0), &contourSeq, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_NONE, cvPoint(0, 0));
 	// Iterate over each contour
 	for (CvSeq* seq = contourSeq; seq != 0; seq = seq->h_next) contourCount++;
 	{ char buf[32]; sprintf(buf, "foreach contour (%d)", contourCount); NSLog2(buf); }
-#if 01
 	if (contourCount > 0) {
 		for (CvSeq* seq = contourSeq; seq != 0; seq = seq->h_next) {
 			IplImage *overlay = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 3);
@@ -543,7 +546,6 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 			}
 			cvReleaseImage(&overlay);
 		}
-		cvReleaseMemStorage2(contourSeq);
 
 		if (handsSeq->total) {
 			IplImage *overlay = cvCreateImage(cvGetSize(tmp3d), tmp3d->depth, 3);
@@ -573,12 +575,12 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 		}
 
 	}
+	cvReleaseMemStorage2(contourSeq);
 	cvReleaseMemStorage2(handsSeq);
-
 #endif
 	goto end;
 	end:;
-	cvAddWeighted(tmp3d, 0.7, red3d, 0.3, 0, tmp3d);
+	//cvAddWeighted(tmp3d, 0.7, red3d, 0.3, 0, tmp3d);
 
 	NSLog2("end proc");
 	cvReleaseImage(&tmp1d);
