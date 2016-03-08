@@ -18,13 +18,6 @@ int main(int argc, char *argv[], char *envp[]) {
 		return -1;
 	}
 
-	int cam_width = (int)cvGetCaptureProperty(cv_cap, CV_CAP_PROP_FRAME_WIDTH);
-	int cam_height = (int)cvGetCaptureProperty(cv_cap, CV_CAP_PROP_FRAME_HEIGHT);
-
-	cvNamedWindow(INPUT_WINDOW, 0);
-	cvNamedWindow(OUTPUT_WINDOW, 0);
-	cvMoveWindow(OUTPUT_WINDOW, 0, 300);
-
 	IplImage *input = cvQueryFrame(cv_cap);
 	IplImage *output = cvCloneImage(input);
 
@@ -56,13 +49,11 @@ int main(int argc, char *argv[], char *envp[]) {
 
 		ocv_handAnalysis(input, output);
 
-		cvResizeWindow(INPUT_WINDOW, cam_width / 2, cam_height / 2);
 		cvCvtColor(input, input, CV_RGB2BGR);
-		cvShowImage(INPUT_WINDOW, input);
+		CVSHOW(INPUT_WINDOW, 0, 0, input->width/2, input->height/2, input);
 
-		cvResizeWindow(OUTPUT_WINDOW, cam_width / 2, cam_height / 2);
 		cvCvtColor(output, output, CV_RGB2BGR);
-		cvShowImage(OUTPUT_WINDOW, output);
+		CVSHOW(OUTPUT_WINDOW, 0, output->height*2/3, output->width/2, output->height/2, output);
 	}
 
 	/* clean up */
