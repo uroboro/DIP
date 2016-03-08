@@ -88,13 +88,13 @@
 
 
 #if DIP_DESKTOP
-#define _CVSHOW(name, x, y, w, h, image) { cvNamedWindow(name, 0); if (x > 0 && y > 0) cvMoveWindow(name, x, y); cvResizeWindow(name, w, h); cvShowImage(name, image); }
+#define _CVSHOW(name, x, y, w, h, image) { cvNamedWindow(name, 0); cvMoveWindow(name, x, y); cvResizeWindow(name, w, h); cvShowImage(name, image); }
 #define CVSHOW(name, x, y, w, h, image) {\
 	if (image->nChannels == 1) {\
-		IplImage *tmp3d = cvCreateImage(cvGetSize(image), image->depth, 3);\
-		cvMerge(image, image, image, NULL, tmp3d);\
-		_CVSHOW(name, x, y, w, h, tmp3d);\
-		cvReleaseImage(&tmp3d);\
+		IplImage *tmp3d ## __LINE__ = cvCreateImage(cvGetSize(image), image->depth, 3);\
+		cvMerge(image, image, image, NULL, tmp3d ## __LINE__);\
+		_CVSHOW(name, x, y, w, h, tmp3d ## __LINE__);\
+		cvReleaseImage(&tmp3d ## __LINE__);\
 	} else { _CVSHOW(name, x, y, w, h, image); }\
 }
 #else
