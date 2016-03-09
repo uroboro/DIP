@@ -8,6 +8,7 @@
 
 #import "DIPViewController.h"
 #import "OCVImageOperator.h"
+#include "operateImage.h"
 
 UIKIT_EXTERN NSString *rvcName(void) {
 	return @"DIPViewController";
@@ -22,7 +23,6 @@ UIKIT_EXTERN NSString *rvcName(void) {
 
 @property (nonatomic, retain) UIImage *currentImage;
 @property (nonatomic, assign) dispatch_queue_t q;
-@property (nonatomic, retain) OCVImageOperator *imageOperatorImage;
 @property (nonatomic, retain) OCVImageOperator *imageOperatorVideo;
 
 @property (nonatomic, retain) NSMutableDictionary *options;
@@ -78,12 +78,6 @@ UIKIT_EXTERN NSString *rvcName(void) {
 		[imageView setBackgroundColor:[UIColor greenColor]];
 		imageView;
 	})];
-
-	_imageOperatorImage = ({
-		OCVImageOperator *imageOperator = [[OCVImageOperator alloc] initWithView:_stillShotView];
-		imageOperator.options = [@{@"inputType":@"image",@"floatingValue":@(1)} mutableCopy];
-		imageOperator;
-	});
 
 	_imageOperatorVideo = ({
 		OCVImageOperator *imageOperator = [[OCVImageOperator alloc] initWithView:_cameraView];
@@ -208,8 +202,36 @@ UIKIT_EXTERN NSString *rvcName(void) {
 
 - (void)processImage {
 	if (!_currentImage) { UIAlert(@"!_currentImage",nil); return; }
+
 	dispatch_async(_q, ^{
-		[_imageOperatorImage getCGImage:_currentImage.CGImage];
+		CGImageRef imageRef = _currentImage.CGImage;
+
+		#define SCALE 0
+		#if SCALE
+			float floatingValue = options[@"floatingValue"] ? ((NSNumber *)options[@"floatingValue"]).floatValue : 1;
+			NSLog2(([NSString stringWithFormat:@"floatingValue %@", options[@"floatingValue"]]).UTF8String);
+			// Scale down input image
+			if (floatingValue < 1) { CGImageRef tmp = CGImageCreateScaled(imageRef, floatingValue); if (tmp) { imageRef = tmp; } }
+		#endif
+
+		CGImageRef imageRefOut = operateImageRefCreate(imageRef);
+		if (!imageRefOut) { present(DBGOutputModeSyslog|0, "no imageRefOut"); return; }
+
+		#if SCALE
+			// Scale up output image
+			if (floatingValue < 1) { CGImageRef tmp = CGImageCreateScaled(imageRefOut, 1/floatingValue); if (tmp) { CGImageRelease(imageRefOut); imageRefOut = tmp; } }
+		#endif
+
+		CGRect availableRect = UtilsAvailableScreenRect();
+		CGFloat k = (CGFloat)CGImageGetHeight(imageRefOut) / CGImageGetWidth(imageRefOut);
+		_stillShotView.frame = CGRectMake(_stillShotView.frame.origin.x, _stillShotView.frame.origin.y, availableRect.size.width, floor(k * availableRect.size.width));
+
+		UIImage *image = [[UIImage alloc] initWithCGImage:imageRefOut];
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[_stillShotView setImage:image];
+			[image release];
+		});
+		CGImageRelease(imageRefOut);
 	});
 }
 
