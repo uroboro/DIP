@@ -53,21 +53,19 @@
 		if (floatingValue < 1) { CGImageRef tmp = CGImageCreateScaled(imageRefOut, 1/floatingValue); if (tmp) { CGImageRelease(imageRefOut); imageRefOut = tmp; } }
 	#endif
 
-	UIImage *image = [[UIImage alloc] initWithCGImage:imageRefOut];
-	CGImageRelease(imageRefOut);
-
 	CGRect availableRect = UtilsAvailableScreenRect();
 	CGFloat k = (CGFloat)CGImageGetHeight(imageRefOut) / CGImageGetWidth(imageRefOut);
 	_view.frame = CGRectMake(_view.frame.origin.x, _view.frame.origin.y, availableRect.size.width, floor(k * availableRect.size.width));
 
+	UIImage *image = [[UIImage alloc] initWithCGImage:imageRefOut];
 	dispatch_async(dispatch_get_main_queue(), ^{
 		if ([_view isKindOfClass:[UIImageView class]]) {
 			UIImageView *iv = (UIImageView *)_view;
 			[iv setImage:image];
 		}
+		[image release];
 	});
-
-	[image release];
+	CGImageRelease(imageRefOut);
 
 	if (_options[@"fps"]) {
 		[self setFPS:((NSNumber *)_options[@"fps"]).intValue];
