@@ -220,6 +220,7 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand) {
 			sfRadius -= 2;
 			radius = (lnRadius + sfRadius) / 2;
 			{ char buf[32]; sprintf(buf, "radius: %.2f", radius); NSLog2(buf); }
+			//cvCircle(overlay, center, radius, CV_RGB(0, 255, 0), 1, 8, 0);
 		}
 
 		NSLog2("segments");
@@ -244,14 +245,14 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand) {
 
 				NSLog2("circle rotate");
 				// Rotate sequence so that the first item contains a black pixel
-				int safeCount = 0; for (CvSeq* seq = circleContours; seq != 0; seq = seq->h_next) safeCount++;
-				CvPoint *point = CV_GET_SEQ_ELEM(CvPoint, circleContours, circleContours->total - 1);
+				int safeCount = circleContours->total;//0; for (CvSeq* seq = circleContours; seq != 0; seq = seq->h_next) safeCount++;
+				CvPoint *point = CV_GET_SEQ_ELEM(CvPoint, circleContours, safeCount - 1);
 				{ char buf[32]; sprintf(buf, "circle rotate %d loops", safeCount); NSLog2(buf); }
 				while (cvGet2D(canvas, point->y, point->x).val[0] != 0 && safeCount-- > 0) {
 					{ char buf[32]; sprintf(buf, "circle rotate loop: %d", safeCount); NSLog2(buf); }
 					cvSeqPushFront(circleContours, point);
 					cvSeqPop(circleContours, NULL);
-					point = CV_GET_SEQ_ELEM(CvPoint, circleContours, circleContours->total - 1);
+					point = CV_GET_SEQ_ELEM(CvPoint, circleContours, safeCount - 1);
 				}
 				{ char buf[32]; sprintf(buf, "safety check with %d loops left", safeCount); NSLog2(buf); }
 				if (safeCount < 0) {
@@ -263,13 +264,13 @@ int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand) {
 
 			int maxCounterIndex = -1;
 			// Find longest line segment
-			int safeCount = 0; for (CvSeq* seq = circleContours; seq != 0; seq = seq->h_next) safeCount++;
+			int safeCount = circleContours->total;//0; for (CvSeq* seq = circleContours; seq != 0; seq = seq->h_next) safeCount++;
+			{ char buf[32]; sprintf(buf, "find wrist with %d loops (%d)", safeCount, circleContours->total); NSLog2(buf); }
 			ocvLine line;
 			CvPoint *lastPoint = CV_GET_SEQ_ELEM(CvPoint, circleContours, safeCount - 1);
 			char previousValue = (char)cvGet2D(canvas, lastPoint->y, lastPoint->x).val[0] != 0;
 			int counter = 0;
 			int maxCounter = -1;
-			{ char buf[32]; sprintf(buf, "find wrist with %d loops (%d)", safeCount,circleContours->total); NSLog2(buf); }
 			for (int i = 0; i < safeCount; i++) {
 				{ char buf[32]; sprintf(buf, "circle find loop: %d", i); NSLog2(buf); }
 				CvPoint *point = CV_GET_SEQ_ELEM(CvPoint, circleContours, i);
@@ -537,6 +538,7 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 			TRY_ONCE(
 			ret = ocvAnalizeContour(seq, overlay, &myHand);
 			)
+			cvCopyNonZero(overlay, tmp3d, NULL);
 
 			// Copy overlay and text to output image
 			if (ret && (myHand.fingers > 2 && myHand.fingers < 6)) {
@@ -580,7 +582,7 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 #endif
 	goto end;
 	end:;
-	//cvAddWeighted(tmp3d, 0.7, red3d, 0.3, 0, tmp3d);
+	cvAddWeighted(tmp3d, 0.7, red3d, 0.3, 0, tmp3d);
 
 	NSLog2("end proc");
 	cvReleaseImage(&tmp1d);
