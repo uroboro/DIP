@@ -1,5 +1,5 @@
-#ifndef UIIMAGE_IPLIMAGE_H
-#define UIIMAGE_IPLIMAGE_H
+#ifndef UIIMAGE_OPENCV_H
+#define UIIMAGE_OPENCV_H
 
 #include <CoreGraphics/CGImage.h>
 
@@ -20,4 +20,4 @@ DIP_EXTERN UIImage *UIImageFromIplImage(IplImage *image);
 @end
 #endif
 
-#endif /* UIIMAGE_IPLIMAGE_H */
+#endif /* UIIMAGE_OPENCV_H */

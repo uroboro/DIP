@@ -1,7 +1,7 @@
 #include "messages.h"
 
 #include "operateImage.h"
-#include "UIImage+IplImage.h"
+#include "UIImage+OpenCV.h"
 #import "utils.h"
 
 #include "ocv_hand.h"
