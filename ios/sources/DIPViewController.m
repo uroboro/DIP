@@ -205,33 +205,7 @@ UIKIT_EXTERN NSString *rvcName(void) {
 
 	dispatch_async(_q, ^{
 		CGImageRef imageRef = _currentImage.CGImage;
-
-		#define SCALE 0
-		#if SCALE
-			float floatingValue = options[@"floatingValue"] ? ((NSNumber *)options[@"floatingValue"]).floatValue : 1;
-			NSLog2(([NSString stringWithFormat:@"floatingValue %@", options[@"floatingValue"]]).UTF8String);
-			// Scale down input image
-			if (floatingValue < 1) { CGImageRef tmp = CGImageCreateScaled(imageRef, floatingValue); if (tmp) { imageRef = tmp; } }
-		#endif
-
-		CGImageRef imageRefOut = operateImageRefCreate(imageRef);
-		if (!imageRefOut) { present(DBGOutputModeSyslog|0, "no imageRefOut"); return; }
-
-		#if SCALE
-			// Scale up output image
-			if (floatingValue < 1) { CGImageRef tmp = CGImageCreateScaled(imageRefOut, 1/floatingValue); if (tmp) { CGImageRelease(imageRefOut); imageRefOut = tmp; } }
-		#endif
-
-		CGRect availableRect = UtilsAvailableScreenRect();
-		CGFloat k = (CGFloat)CGImageGetHeight(imageRefOut) / CGImageGetWidth(imageRefOut);
-		_stillShotView.frame = CGRectMake(_stillShotView.frame.origin.x, _stillShotView.frame.origin.y, availableRect.size.width, floor(k * availableRect.size.width));
-
-		UIImage *image = [[UIImage alloc] initWithCGImage:imageRefOut];
-		dispatch_async(dispatch_get_main_queue(), ^{
-			[_stillShotView setImage:image];
-			[image release];
-		});
-		CGImageRelease(imageRefOut);
+		operateImageProcessImageAndUpdateView(imageRef, _stillShotView, _options);
 	});
 }
 

@@ -30,3 +30,34 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef) {
 
 	return imageRefOut;
 }
+
+void operateImageProcessImageAndUpdateView(CGImageRef imageRef, UIImageView *imageView, NSDictionary *options) {
+	if (!imageRef) { present(DBGOutputModeSyslog|0, "!imageRef"); return; }
+
+	#define SCALE 0
+	#if SCALE
+		float floatingValue = options[@"floatingValue"] ? ((NSNumber *)options[@"floatingValue"]).floatValue : 1;
+		present(DBGOutputModeSyslog|0, "floatingValue %f", floatingValue);
+		// Scale down input image
+		if (floatingValue < 1) { CGImageRef tmp = CGImageCreateScaled(imageRef, floatingValue); if (tmp) { imageRef = tmp; } }
+	#endif
+
+	CGImageRef imageRefOut = operateImageRefCreate(imageRef);
+	if (!imageRefOut) { present(DBGOutputModeSyslog|0, "no imageRefOut"); return; }
+
+	#if SCALE
+		// Scale up output image
+		if (floatingValue < 1) { CGImageRef tmp = CGImageCreateScaled(imageRefOut, 1/floatingValue); if (tmp) { CGImageRelease(imageRefOut); imageRefOut = tmp; } }
+	#endif
+
+	CGRect availableRect = UtilsAvailableScreenRect();
+	CGFloat k = (CGFloat)CGImageGetHeight(imageRefOut) / CGImageGetWidth(imageRefOut);
+	imageView.frame = CGRectMake(imageView.frame.origin.x, imageView.frame.origin.y, availableRect.size.width, floor(k * availableRect.size.width));
+
+	UIImage *image = [[UIImage alloc] initWithCGImage:imageRefOut];
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[imageView setImage:image];
+		[image release];
+	});
+	CGImageRelease(imageRefOut);
+}

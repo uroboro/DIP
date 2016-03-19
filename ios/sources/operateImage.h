@@ -7,7 +7,11 @@
 
 DIP_EXTERN_BEGIN
 
+IplImage *ocv_handSpriteCreate(char *path);
+
 CGImageRef operateImageRefCreate(CGImageRef imageRef);
+
+void operateImageProcessImageAndUpdateView(CGImageRef imageRef, UIImageView *imageView, NSDictionary *options);
 
 DIP_EXTERN_END
 
