@@ -17,6 +17,8 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef) {
 	if (!imageRef) { present(1, "!imageRef0"); return nil; }
 	NSLog2("operating");
 
+	CGImageRef imageRefOut = NULL;
+#if USE_IPLIMAGE
 	IplImage *iplInput = IplImageFromCGImage(imageRef);
 	if (!iplInput) { present(1, "!iplInput"); return nil; }
 
@@ -24,9 +26,15 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef) {
 
 	ocv_handAnalysis(iplInput, iplOutput);
 
-	CGImageRef imageRefOut = CGImageFromIplImage(iplOutput);
+	imageRefOut = CGImageFromIplImage(iplOutput);
 	cvReleaseImage(&iplInput);
 	cvReleaseImage(&iplOutput);
+#else
+	cv::Mat image, gray;
+	CVMatFromCGImage(imageRef, image);
+	cv::cvtColor(image, gray, cv::COLOR_RGB2GRAY);
+	imageRefOut = CGImageFromCVMat(gray);
+#endif
 
 	return imageRefOut;
 }
