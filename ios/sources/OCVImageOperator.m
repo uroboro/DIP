@@ -35,7 +35,7 @@
 }
 
 - (void)getCGImage:(CGImageRef)imageRef {
-	operateImageProcessImageAndUpdateView(imageRef, _view, _options);
+	operateImageProcessImageAndUpdateView(imageRef, (UIImageView *)_view, _options);
 	if (_options[@"fps"]) {
 		[self setFPS:((NSNumber *)_options[@"fps"]).intValue];
 	}
