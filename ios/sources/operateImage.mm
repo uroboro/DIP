@@ -23,17 +23,19 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef) {
 	if (!iplInput) { present(1, "!iplInput"); return nil; }
 
 	IplImage *iplOutput = cvCloneImage(iplInput);
-
 	ocv_handAnalysis(iplInput, iplOutput);
 
 	imageRefOut = CGImageFromIplImage(iplOutput);
 	cvReleaseImage(&iplInput);
 	cvReleaseImage(&iplOutput);
 #else
-	cv::Mat image, gray;
+	cv::Mat image;
 	CVMatFromCGImage(imageRef, image);
-	cv::cvtColor(image, gray, cv::COLOR_RGB2GRAY);
-	imageRefOut = CGImageFromCVMat(gray);
+
+	cv::Mat output;
+	ocv_handAnalysisMat(image, output);
+
+	imageRefOut = CGImageFromCVMat(output);
 #endif
 
 	return imageRefOut;
