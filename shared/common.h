@@ -59,7 +59,7 @@
 		#define TRY_ONCE(block) { static int tryAgain ## __LINE__ = 1; if (tryAgain ## __LINE__) { tryAgain ## __LINE__ =\
 				({ int b = 1; try { block; }\
 				catch (cv::Exception& e) {\
-					const char* err_msg = e.what(); char buf[1024]; (buf, "OpenCV exception caught: %s", err_msg); present(0, buf); b = 0;\
+					const char* err_msg = e.what(); char buf[1024]; sprintf(buf, "OpenCV exception caught: %s", err_msg); present(0, buf); b = 0;\
 				};\
 				b; });\
 			}; tryAgain ## __LINE__; }
@@ -79,13 +79,12 @@
 		objc_msgSend(a, sel_registerName("show"));\
 		objc_msgSend(a, sel_registerName("release"));\
 	})
-	#define NSLog2(message) NSLog(@"XXX Reached line \e[31m%d\e[m, message: \e[32m%s\e[m", __LINE__, message);
+	#define NSLog2(message) NSLog(@"XXX Reached \e[33m%s\e[m \e[31m%d\e[m, message: \e[32m%s\e[m", __FILE__, __LINE__, message);
 #else
 	#define UIAlert(t, m)
 	#define NSLog(...)
 	#define NSLog2(message) present(0, "XXX Reached \e[33m%s\e[m \e[31m%d\e[m, message: \e[32m%s\e[m", __FILE__, __LINE__, message);
 #endif
-
 
 #if DIP_DESKTOP
 #define _CVSHOW(name, x, y, w, h, image) { cvNamedWindow(name, 0); cvMoveWindow(name, x, y); cvResizeWindow(name, w, h); cvShowImage(name, image); }
