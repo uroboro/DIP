@@ -24,6 +24,10 @@ void ocvDrawHandInfo(IplImage *overlay, ocvHand myHand);
 
 void ocv_handAnalysis(IplImage *src, IplImage *dst);
 
+#ifdef __cplusplus
+void ocv_handAnalysisMat(cv::Mat& src, cv::Mat& dst);
+#endif
+
 DIP_EXTERN_END
 
 #endif /* OCV_HAND */

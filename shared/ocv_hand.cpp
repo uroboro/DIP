@@ -604,3 +604,45 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 	cvCopy(tmp3d, dst, NULL);
 	cvReleaseImage(&tmp3d);
 }
+
+#if DIP_MOBILE
+#include <dispatch/dispatch.h>
+#else
+#define dispatch_async(...)
+#endif
+
+void ocvDistance2GrayscaleMat(cv::Mat& src, cv::Mat& dst) {
+	if (src.channels() == 3) {
+		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{ char buf[32]; sprintf(buf, "sssiiizzzeee %dx%d", src.size().width, src.size().height); NSLog2(buf); });
+		for (unsigned int y = 0; y < src.size().height; y++) {
+			for (unsigned int x = 0; x < src.size().width; x++) {
+				cv::Scalar p = src.at<cv::Scalar>(cv::Point(y, x));
+				// Calculate distance to grayscale value
+				dst.at<cv::Scalar>(cv::Point(y, x)) = cv::Scalar::all(sqrt(2.0 / 3 * (
+					  p.val[0] * (p.val[0] - p.val[1])
+					+ p.val[1] * (p.val[1] - p.val[2])
+					+ p.val[2] * (p.val[2] - p.val[0])
+				)));
+			}
+		}
+	}
+}
+void ocv_handAnalysisMat(cv::Mat& src, cv::Mat& dst) {
+	double _time = cv::getTickCount();
+	//cv::cvtColor(src, dst, cv::COLOR_RGB2GRAY);
+	src.copyTo(dst);
+	//dst.create(src.size().height, src.size().width, CV_8UC3);
+	ocvDistance2GrayscaleMat(src, dst);
+	//cv::fastNlMeansDenoisingColored(src, dst); // 3s per image, too slow
+	{ // On-screen debug data
+		_time = (cv::getTickCount() - _time) / cv::getTickFrequency();
+		{
+			char buf[32]; sprintf(buf, "time: %dms (%.1f fps)?", (int)(1000 * _time), 1/_time);
+			cv::putText(dst, buf, cv::Point(10, dst.rows - 40), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 0, 255), 2, 8);
+		}
+		{
+			char buf[32]; sprintf(buf, "size: %dx%d", dst.cols, dst.rows);
+			cv::putText(dst, buf, cv::Point(10, dst.rows - 10), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 0, 255), 2, 8);
+		}
+	}
+}
