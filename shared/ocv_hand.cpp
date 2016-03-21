@@ -611,29 +611,48 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 #define dispatch_async(...)
 #endif
 
+// dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{ char buf[32]; sprintf(buf, "src size %03dx%03d", src.size().width, src.size().height); NSLog2(buf); });
 void ocvDistance2GrayscaleMat(cv::Mat& src, cv::Mat& dst) {
 	if (src.channels() == 3) {
-		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{ char buf[32]; sprintf(buf, "sssiiizzzeee %dx%d", src.size().width, src.size().height); NSLog2(buf); });
 		for (unsigned int y = 0; y < src.size().height; y++) {
 			for (unsigned int x = 0; x < src.size().width; x++) {
-				cv::Scalar p = src.at<cv::Scalar>(cv::Point(y, x));
+				cv::Vec3b p = src.at<cv::Vec3b>(cv::Point(x, y));
 				// Calculate distance to grayscale value
-				dst.at<cv::Scalar>(cv::Point(y, x)) = cv::Scalar::all(sqrt(2.0 / 3 * (
-					  p.val[0] * (p.val[0] - p.val[1])
-					+ p.val[1] * (p.val[1] - p.val[2])
-					+ p.val[2] * (p.val[2] - p.val[0])
+				dst.at<cv::Vec3b>(cv::Point(x, y)) = cv::Vec3b::all(sqrt(2.0 / 3 * (
+					  p[0] * (p[0] - p[1])
+					+ p[1] * (p[1] - p[2])
+					+ p[2] * (p[2] - p[0])
 				)));
 			}
 		}
 	}
+}
+void maskByDistance2GrayscaleMat(cv::Mat& src, cv::Mat& dst, int minDistance) {
+	cv::Mat tmp3d(src);
+	ocvDistance2GrayscaleMat(src, tmp3d);
+	cv::GaussianBlur(tmp3d, tmp3d, cv::Size(9, 9), 0, 0, 0);
+	cv::cvtColor(tmp3d, dst, cv::COLOR_RGB2GRAY);
+	#if DIP_DESKTOP
+	cvEqualizeHist(dst, dst);
+	#endif
+	//CVSHOW("grayscale2", dst->width*2/3, dst->height*2/3, dst->width/2, dst->height/2, dst);
+	#if DIP_MOBILE
+	cv::threshold(dst, dst, minDistance, 255, cv::THRESH_BINARY);
+	#endif
 }
 void ocv_handAnalysisMat(cv::Mat& src, cv::Mat& dst) {
 	double _time = cv::getTickCount();
 	//cv::cvtColor(src, dst, cv::COLOR_RGB2GRAY);
 	src.copyTo(dst);
 	//dst.create(src.size().height, src.size().width, CV_8UC3);
-	ocvDistance2GrayscaleMat(src, dst);
+	maskByDistance2GrayscaleMat(src, dst, OCV_GRAYSCALE_DISTANCE);
 	//cv::fastNlMeansDenoisingColored(src, dst); // 3s per image, too slow
+	if (dst.channels() == 1) {
+		cv::Mat tmp3d;
+		cv::Mat matArray[3] = { dst, dst, dst };
+		cv::merge(matArray, 3, tmp3d);
+		tmp3d.copyTo(dst);
+	}
 	{ // On-screen debug data
 		_time = (cv::getTickCount() - _time) / cv::getTickFrequency();
 		{
