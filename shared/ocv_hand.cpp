@@ -633,7 +633,7 @@ void maskByDistance2GrayscaleMat(cv::Mat& src, cv::Mat& dst, int minDistance) {
 	cv::GaussianBlur(tmp3d, tmp3d, cv::Size(9, 9), 0, 0, 0);
 	cv::cvtColor(tmp3d, dst, cv::COLOR_RGB2GRAY);
 	#if DIP_DESKTOP
-	cvEqualizeHist(dst, dst);
+	cv::equalizeHist(dst, dst);
 	#endif
 	//CVSHOW("grayscale2", dst->width*2/3, dst->height*2/3, dst->width/2, dst->height/2, dst);
 	#if DIP_MOBILE

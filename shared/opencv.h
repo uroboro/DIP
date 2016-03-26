@@ -11,7 +11,11 @@
 #ifdef __cplusplus
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+
+#if CV_VERSION_MAJOR >= 3
 #include <opencv2/imgcodecs.hpp>
+#endif
+
 #endif
 
 #endif /* DIP_OPENCV */
