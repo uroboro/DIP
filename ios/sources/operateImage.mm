@@ -18,6 +18,7 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef) {
 	NSLog2("operating");
 
 	CGImageRef imageRefOut = NULL;
+#define USE_IPLIMAGE 0
 #if USE_IPLIMAGE
 	IplImage *iplInput = IplImageFromCGImage(imageRef);
 	if (!iplInput) { present(1, "!iplInput"); return nil; }
