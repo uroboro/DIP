@@ -9,3 +9,5 @@ SAD_BSubtraction
 *.ipa
 *.zip
 scrap
+DIP
+.objs
