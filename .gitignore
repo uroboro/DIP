@@ -2,5 +2,10 @@
 # Theos #
 #########
 .theos
-theos
 packages
+
+Headers
+SAD_BSubtraction
+*.ipa
+*.zip
+scrap
