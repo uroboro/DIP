@@ -19,14 +19,15 @@ TOOL_NAME = DIP
 #include $(THEOS)/makefiles/common.mk
 #include $(THEOS_MAKE_PATH)/tool.mk
 
-test: $(TOOL_NAME)
-	@$(or $(THEOS_OBJ_DIR),./)/$(TOOL_NAME)
-
 CC = clang++
 OBJ_DIR = .objs
 OBJECTS = $(patsubst %,$(OBJ_DIR)/%,$(call getobjs, $(DIP_FILES)))
 
 all: $(DIP_FILES) $(TOOL_NAME)
+
+test: $(TOOL_NAME)
+	@echo "==> ./$^"
+	@$(or $(THEOS_OBJ_DIR),./)/$(TOOL_NAME)
 
 $(OBJECTS): | $(OBJ_DIR)
 
