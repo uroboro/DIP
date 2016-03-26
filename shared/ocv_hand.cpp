@@ -521,7 +521,7 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 		cvReleaseImage(&red1d);
 	}
 	//goto end;
-#if 01
+	#if 01
 	NSLog2("get contours");
 	cvFindContours2(tmp1d, cvCreateMemStorage(0), &contourSeq, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_NONE, cvPoint(0, 0));
 	// Iterate over each contour
@@ -579,7 +579,8 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 	}
 	cvReleaseMemStorage2(contourSeq);
 	cvReleaseMemStorage2(handsSeq);
-#endif
+	#endif
+
 	goto end;
 	end:;
 	cvAddWeighted(tmp3d, 0.7, red3d, 0.3, 0, tmp3d);
@@ -612,7 +613,18 @@ void ocv_handAnalysis(IplImage *src, IplImage *dst) {
 #endif
 
 // dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{ char buf[32]; sprintf(buf, "src size %03dx%03d", src.size().width, src.size().height); NSLog2(buf); });
+void ocvDistance2GrayscaleFunc(cv::Vec3b& p, const int *pos) {
+	p = cv::Vec3b::all(sqrt(2.0 / 3 * (
+		  p[0] * (p[0] - p[1])
+		+ p[1] * (p[1] - p[2])
+		+ p[2] * (p[2] - p[0])
+	)));
+}
 void ocvDistance2GrayscaleMat(cv::Mat& src, cv::Mat& dst) {
+#if 01
+	src.copyTo(dst);
+	dst.forEach<cv::Vec3b>(&ocvDistance2GrayscaleFunc);
+#else
 	if (src.channels() == 3) {
 		for (unsigned int y = 0; y < src.size().height; y++) {
 			for (unsigned int x = 0; x < src.size().width; x++) {
@@ -626,12 +638,12 @@ void ocvDistance2GrayscaleMat(cv::Mat& src, cv::Mat& dst) {
 			}
 		}
 	}
+#endif
 }
 void maskByDistance2GrayscaleMat(cv::Mat& src, cv::Mat& dst, int minDistance) {
-	cv::Mat tmp3d(src);
-	ocvDistance2GrayscaleMat(src, tmp3d);
-	cv::GaussianBlur(tmp3d, tmp3d, cv::Size(9, 9), 0, 0, 0);
-	cv::cvtColor(tmp3d, dst, cv::COLOR_RGB2GRAY);
+	ocvDistance2GrayscaleMat(src, dst);
+	cv::GaussianBlur(dst, dst, cv::Size(9, 9), 0, 0, 0);
+	cv::cvtColor(dst, dst, cv::COLOR_RGB2GRAY);
 	#if DIP_DESKTOP
 	cv::equalizeHist(dst, dst);
 	#endif
