@@ -12,6 +12,10 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#ifdef DIP_DESKTOP
+#include <opencv2/highgui/highgui.hpp>
+#endif
+
 #if CV_VERSION_MAJOR >= 3
 #include <opencv2/imgcodecs.hpp>
 #endif
