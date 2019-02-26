@@ -2,7 +2,7 @@
 findfiles = $(foreach ext, c cpp, $(wildcard $(1)/*.$(ext)))
 getobjs = $(foreach ext, c cpp m mm x xm xi xmi, $(filter %.o,$(patsubst %.$(ext),%.o,$(1))))
 
-OPENCV_CDFLAGS = `pkg-config --cflags opencv`
+OPENCV_CFLAGS = `pkg-config --cflags opencv`
 OPENCV_LDFLAGS = -L/usr/lib/x86_64-linux-gnu/ `pkg-config --libs opencv`
 #-stdlib=libc++
 # -fopenmp

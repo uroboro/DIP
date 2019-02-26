@@ -18,7 +18,7 @@
 // p . q
 #define cvPointDot(p, q)		((p).x * (q).x + (p).y * (q).y)
 // p - q
-#define cvPointSubtract(p, q)	cvPointAdd(p, cvPointScale(q, -1))
+#define cvPointSubtract(p, q)	cvPoint((p).x - (q).x, (p).y - (q).y)
 
 #define cvPointDistance(p, q)	cvPointModule(cvPointSubtract(p, q))
 // (p + q) / 2

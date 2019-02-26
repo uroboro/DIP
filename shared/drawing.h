@@ -17,20 +17,18 @@ DIP_EXTERN_BEGIN
 
 char PointInRect(CvPoint point, CvSize size);
 
-typedef struct _circle {
+typedef struct Circle {
 	CvPoint center;
 	int radius;
 	CvScalar color;
 	int thickness;
 } Circle;
 
-Circle makeCircle(CvPoint center, int radius, CvScalar color, int thickness);
-Circle makeCircleFromDrag(Drag drag, CvScalar color, int thickness);
+struct Circle makeCircle(CvPoint center, int radius, CvScalar color, int thickness);
+struct Circle makeCircleFromDrag(Drag drag, CvScalar color, int thickness);
 int printCircle(Circle circle);
 
 void drawCircle(CvArr *img, Circle circle);
-
-
 
 typedef struct _square {
 	CvPoint origin;

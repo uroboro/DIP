@@ -18,7 +18,9 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef) {
 	NSLog2("operating");
 
 	CGImageRef imageRefOut = NULL;
-#define USE_IPLIMAGE 0
+	int tries = 0;
+	try {
+#define USE_IPLIMAGE 01
 #if USE_IPLIMAGE
 	IplImage *iplInput = IplImageFromCGImage(imageRef);
 	if (!iplInput) { present(1, "!iplInput"); return nil; }
@@ -38,7 +40,14 @@ CGImageRef operateImageRefCreate(CGImageRef imageRef) {
 
 	imageRefOut = CGImageFromCVMat(output);
 #endif
-
+	} catch (cv::Exception& e) {
+		if (tries == 0) {
+			tries++;
+			const char* err_msg = e.what();
+			NSString * m = [NSString stringWithFormat:@"OpenCV exception caught: %s", err_msg];
+			UIAlert(@"Exception", m);
+		}
+	}
 	return imageRefOut;
 }
 
@@ -68,6 +77,7 @@ void operateImageProcessImageAndUpdateView(CGImageRef imageRef, UIImageView *ima
 	UIImage *image = [[UIImage alloc] initWithCGImage:imageRefOut];
 	dispatch_async(dispatch_get_main_queue(), ^{
 		[imageView setImage:image];
+		[UIImagePNGRepresentation(image) writeToFile:UtilsDocumentPathWithName(@"Photo_Out.png") atomically:YES];
 		[image release];
 	});
 	CGImageRelease(imageRefOut);

@@ -11,7 +11,7 @@ static void ocvDistance2GrayscaleFunc(cv::Vec3b& p, const int *pos) {
 void ocvDistance2GrayscaleMat(cv::Mat& src, cv::Mat& dst) {
 	src.copyTo(dst);
 	if (src.channels() == 3) {
-		#if CV_VERSION_MAJOR >= 3
+		#if CV_MAJOR_VERSION >= 3
 			dst.forEach<cv::Vec3b>(&ocvDistance2GrayscaleFunc);
 		#else
 			for (unsigned int y = 0; y < src.size().height; y++) {

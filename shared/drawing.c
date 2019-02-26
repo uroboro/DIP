@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <math.h>
+
 #include "drawing.h"
 
 static void hsvtorgb(unsigned char *r, unsigned char *g, unsigned char *b, unsigned char h, unsigned char s, unsigned char v) {
@@ -59,9 +62,6 @@ void drawBadge(CvArr *img, char *string, CvScalar fontColor, double fontSize, Cv
 
 	cvPutText(img, string, textPoint, &font, fontColor);
 }
-
-
-#include <stdio.h>
 
 char pointIsInRect(CvPoint point, CvSize size) {
 	return !(point.y < 0 || point.y >= size.height || point.x < 0 || point.x >= size.width);

@@ -82,7 +82,7 @@ UIKIT_EXTERN NSString *rvcName(void) {
 	_imageOperatorVideo = ({
 		OCVImageOperator *imageOperator = [[OCVImageOperator alloc] initWithView:_cameraView];
 		imageOperator.options = [@{@"inputType":@"video",@"fps":@(5),@"floatingValue":@(0.25)} mutableCopy];
-		[imageOperator.camera swapCamera];
+		// [imageOperator.camera swapCamera];
 		imageOperator;
 	});
 
@@ -247,10 +247,17 @@ UIKIT_EXTERN NSString *rvcName(void) {
 
 // For responding to the user tapping Cancel.
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker {
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-	[self dismissModalViewControllerAnimated:YES];
-	#pragma clang diagnostic pop
+	if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_7_0) {
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wobjc-method-access"
+		[self dismissModalViewControllerAnimated:YES completion:nil];
+		#pragma clang diagnostic pop
+	} else {
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+		[self dismissModalViewControllerAnimated:YES];
+		#pragma clang diagnostic pop
+	}
 	[picker release];
 }
 

@@ -1,4 +1,5 @@
 #include "ocv_cuantify.h"
+#include <math.h>
 
 static inline unsigned char cuantifyEquation(unsigned char p, unsigned int colorDepth) {
 	double r = (double)((2 << 8) - 1) / ((2 << colorDepth) - 1);

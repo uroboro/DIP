@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<script src="/static/microajax.js" charset="utf-8"></script>
+
+	<script type="text/javascript">
+	function getJSON(x) {
+		let url = x.url;
+		if (x.params) {
+			url += "?" + Object.keys(x.params).map(function (key) {
+				return [key, x.params[key]].join('=');
+			}).join('&');
+		}
+		return new microAjax(url, function(res) {
+			let j;
+			try {
+				j = JSON.parse(res);
+			} catch (e) {
+				(x.onfail||console.log)(e.message);
+				return;
+			}
+			x.callback(j);
+		});
+	}
+	function onload_main() {
+		getJSON({
+			url: "json/hands",
+			params: '',
+			callback: function(response) {
+				let entries = response.entries;
+				document.getElementById('tableBody').insertAdjacentHTML('afterbegin',
+					entries.map(function(entry) {
+						return '' +
+						'<tr>' +
+							'<td align="right">' +
+								'<span>' + entries.indexOf(entry) + '</span>' +
+							'</td>' +
+							'<td align="center">' +
+								'<img src="static/Results/' + entry.originalPath + '" width="100%">' +
+							'</td>' +
+							'<td align="center">' +
+								'<img src="static/Results/' + entry.colorFilterPath + '" width="100%">' +
+							'</td>' +
+							'<td align="center">' +
+								'<img src="static/Results/' + entry.sizeFilterPath + '" width="100%">' +
+							'</td>' +
+							'<td align="center">' +
+								'<img src="static/Results/' + entry.redOverlayPath + '" width="100%">' +
+							'</td>' +
+							'<td align="center">' +
+								'<table>' +
+									'<thead>' +
+										'<th>hand</th>' +
+										'<th>fingers</th>' +
+										'<th>orientation</th>' +
+										'<th>controlAngle</th>' +
+										'<th>size</th>' +
+										'<th>center</th>' +
+										'<th>thumbTip</th>' +
+										'<th>indexTip</th>' +
+									'</thead>' +
+									'<tbody>' +
+										entry.hands.map(function(hand) {
+										return '' +
+										'<tr>' +
+											'<td align="center">' +
+												'<span>#' + entry.hands.indexOf(hand) + '</span>' +
+											'</td>' +
+											'<td align="center">' +
+												'<span>' + hand.fingers + '</span>' +
+											'</td>' +
+											'<td align="center">' +
+												'<span>' + hand.orientation + '</span>' +
+											'</td>' +
+											'<td align="center">' +
+												'<span>' + hand.controlAngle + '</span>' +
+											'</td>' +
+											'<td align="center">' +
+												'<span>' + hand.size + '</span>' +
+											'</td>' +
+											'<td align="center">' +
+												'<span>(' + hand.center_x + ',' + hand.center_y + ')</span>' +
+											'</td>' +
+											'<td align="center">' +
+												'<span>(' + hand.thumbTip_x + ',' + hand.thumbTip_y + ')</span>' +
+											'</td>' +
+											'<td align="center">' +
+												'<span>(' + hand.indexTip_x + ',' + hand.indexTip_y + ')</span>' +
+											'</td>' +
+										'</tr>'
+										}).join('') +
+									'</tbody>' +
+								'</table>' +
+							'</td>' +
+						'</tr>'
+					}).join('')
+				);
+			}
+		});
+	}
+	</script>
+</head>
+<body onload="onload_main()">
+	<br>
+	<table width="100%">
+		<thead>
+			<th>#</th>
+			<th>originalPath</th>
+			<th>colorFilterPath</th>
+			<th>sizeFilterPath</th>
+			<th>redOverlayPath</th>
+			<th>handInfo</th>
+		</thead>
+		<tbody id="tableBody">
+		</tbody>
+	</table>
+</body>
+</html>

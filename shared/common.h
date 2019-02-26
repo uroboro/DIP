@@ -47,22 +47,28 @@
 	#define DIP_DESKTOP 1
 #endif
 
+#define _STR(x)					#x
+#define STR(x)					_STR(x)
+#define _CAT(x,y)				x##y
+#define CAT(x,y)				_CAT(x,y)
+
 #if DIP_DARWIN
-	#define DO_ONCE(block) { static dispatch_once_t once ## __LINE__; dispatch_once(&once ## __LINE__, ^{block}); }
-	#define TRY_ONCE(block) { static int tryAgain ## __LINE__ = 1; if (tryAgain ## __LINE__) { tryAgain ## __LINE__ = tryCPP(^{block}); }; tryAgain ## __LINE__; }
+	#include <dispatch/dispatch.h>
+	#define DO_ONCE(block) { static dispatch_once_t CAT(once,__LINE__); dispatch_once(& CAT(once,__LINE__), ^{block}); }
+	#define TRY_ONCE(block) { static int CAT(tryAgain,__LINE__) = 1; if (CAT(tryAgain,__LINE__)) { CAT(tryAgain,__LINE__) = tryCPP(^{block}); }; CAT(tryAgain,__LINE__); }
 #else
 	#define __block
 	//#warning Using non-clang "blocks"
-	#define DO_ONCE(block) { static int once ## __LINE__ = 1; if (once ## __LINE__) { once ## __LINE__ = 0; ({block}); } }
+	#define DO_ONCE(block) { static int CAT(once,__LINE__) = 1; if (CAT(once,__LINE__)) { CAT(once,__LINE__) = 0; ({block}); } }
 
 	#ifdef __cplusplus
-		#define TRY_ONCE(block) { static int tryAgain ## __LINE__ = 1; if (tryAgain ## __LINE__) { tryAgain ## __LINE__ =\
+		#define TRY_ONCE(block) { static int CAT(tryAgain,__LINE__) = 1; if (CAT(tryAgain,__LINE__)) { CAT(tryAgain,__LINE__) =\
 				({ int b = 1; try { block; }\
 				catch (cv::Exception& e) {\
 					const char* err_msg = e.what(); char buf[1024]; sprintf(buf, "OpenCV exception caught: %s", err_msg); present(0, buf); b = 0;\
 				};\
 				b; });\
-			}; tryAgain ## __LINE__; }
+			}; CAT(tryAgain,__LINE__); }
 	#else
 		#define TRY_ONCE(block) block
 	#endif
@@ -72,6 +78,7 @@
 #if DIP_MOBILE && __OBJC__
 	#import <objc/runtime.h>
 	#import <objc/message.h>
+	#include <dispatch/dispatch.h>
 
 	#define UIAlert(t, m) dispatch_async(dispatch_get_main_queue(), ^{ \
 		id a = objc_msgSend(objc_getClass("UIAlertView"), sel_registerName("alloc"));\
@@ -79,21 +86,21 @@
 		objc_msgSend(a, sel_registerName("show"));\
 		objc_msgSend(a, sel_registerName("release"));\
 	})
-	#define NSLog2(message) NSLog(@"XXX Reached \e[33m%s\e[m \e[31m%d\e[m, message: \e[32m%s\e[m", __FILE__, __LINE__, message);
+	#define NSLog2(format, ...) NSLog(@"XXX Reached \e[33m%s\e[m \e[31m%d\e[m, message: \e[32m" format "\e[m", __FILE__, __LINE__, ##__VA_ARGS__);
 #else
 	#define UIAlert(t, m)
 	#define NSLog(...)
-	#define NSLog2(message) present(0, "XXX Reached \e[33m%s\e[m \e[31m%d\e[m, message: \e[32m%s\e[m", __FILE__, __LINE__, message);
+	#define NSLog2(format, ...) present(0, "XXX Reached \e[33m%s\e[m \e[31m%d\e[m, message: \e[32m" format "\e[m", __FILE__, __LINE__, ##__VA_ARGS__);
 #endif
 
 #if DIP_DESKTOP
 #define _CVSHOW(name, x, y, w, h, image) { cvNamedWindow(name, 0); cvMoveWindow(name, x, y); cvResizeWindow(name, w, h); cvShowImage(name, image); }
 #define CVSHOW(name, x, y, w, h, image) {\
 	if (image->nChannels == 1) {\
-		IplImage *tmp3d ## __LINE__ = cvCreateImage(cvGetSize(image), image->depth, 3);\
-		cvMerge(image, image, image, NULL, tmp3d ## __LINE__);\
-		_CVSHOW(name, x, y, w, h, tmp3d ## __LINE__);\
-		cvReleaseImage(&tmp3d ## __LINE__);\
+		IplImage * CAT(tmp3d,__LINE__) = cvCreateImage(cvGetSize(image), image->depth, 3);\
+		cvMerge(image, image, image, NULL, CAT(tmp3d,__LINE__));\
+		_CVSHOW(name, x, y, w, h, CAT(tmp3d,__LINE__));\
+		cvReleaseImage(& CAT(tmp3d,__LINE__));\
 	} else { _CVSHOW(name, x, y, w, h, image); }\
 }
 #else

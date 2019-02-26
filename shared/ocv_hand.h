@@ -9,6 +9,7 @@ typedef struct ocvHand {
 	int fingers;
 	int orientation; // 1 left, 0 right
 	float controlAngle; // index-to-thumb angle
+	float size; // palm/area to search when making persistence
 	CvPoint center;
 	CvPoint thumbTip;
 	CvPoint indexTip;
@@ -16,9 +17,9 @@ typedef struct ocvHand {
 
 void ocvCreateHandIconWithHand(IplImage *layer, IplImage *sprite, ocvHand myHand);
 
-void ocvPrefilterImageMask(CvArr *src, IplImage *dst, int grayscaleDistance, CvScalar minScalar, CvScalar maxScalar);
+void ocvPrefilterImageMask(IplImage *src, IplImage *dst, int grayscaleDistance, CvScalar minScalar, CvScalar maxScalar);
 
-int ocvAnalizeContour(CvSeq *seq, IplImage *overlay, ocvHand *myHand);
+int ocvAnalizeContour(uint32_t idx, CvSeq *seq, IplImage *overlay, ocvHand *myHand);
 
 void ocvDrawHandInfo(IplImage *overlay, ocvHand myHand);
 

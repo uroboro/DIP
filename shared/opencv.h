@@ -16,7 +16,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #endif
 
-#if CV_VERSION_MAJOR >= 3
+#if CV_MAJOR_VERSION >= 3
 #include <opencv2/imgcodecs.hpp>
 #endif
 
